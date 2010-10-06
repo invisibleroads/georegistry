@@ -1,0 +1,3 @@
+include georegistry/config/deployment.ini_tmpl
+recursive-include georegistry/public *
+recursive-include georegistry/templates *
