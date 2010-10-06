@@ -1,3 +1,4 @@
-include georegistry/config/deployment.ini_tmpl
+include default.cfg
+include development.ini production.ini test.ini
 recursive-include georegistry/public *
 recursive-include georegistry/templates *

@@ -8,6 +8,8 @@ def make_map(config):
     map = Mapper(directory=config['pylons.paths']['controllers'], always_scan=config['debug'])
     map.minimization = False
     map.explicit = False
+    # Remove trailing slash
+    map.redirect('/{controller}/', '/{controller}')
     # Map errors
     map.connect('/errors/{action}', controller='errors')
     map.connect('/errors/{action}/{id}', controller='errors')
@@ -24,5 +26,10 @@ def make_map(config):
     map.connect('person_logout_plain', '/people/logout', controller='people', action='logout') 
     map.connect('person_logout', '/people/logout/{targetURL}', controller='people', action='logout')
     map.connect('person_reset', '/people/reset', controller='people', action='reset')
+    # Map regions
+    map.connect('region_index_plain', '/regions', controller='regions', action='index')
+    map.connect('region_index', '/regions.{responseFormat}', controller='regions', action='index')
+    map.connect('region_show_plain', '/regions/{countryCode}', controller='regions', action='show')
+    map.connect('region_show', '/regions/{countryCode}.{responseFormat}', controller='regions', action='show')
     # Return
     return map
