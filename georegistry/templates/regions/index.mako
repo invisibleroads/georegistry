@@ -27,6 +27,7 @@ mapOL.addLayers([
     new OpenLayers.Layer.Google("Google Hybrid", {type: google.maps.MapTypeId.HYBRID, numZoomLevels: 20}),
     new OpenLayers.Layer.Google("Google Satellite", {type: google.maps.MapTypeId.SATELLITE, numZoomLevels: 22})
 ]);
+var geoJSONReader = new OpenLayers.Format.GeoJSON();
 // Define controls
 $('#countryCode').change(updateMaps);
 $('#divisionLevel').change(updateMaps);
@@ -35,13 +36,8 @@ function updateMaps() {
     // Load parameters
     var countryCode = $('#countryCode').val();
     var divisionLevel = $('#divisionLevel').val();
-    // Get geojson
-
-
-    // Consider getting json first and have geojson inside
-
-
-    $.get("${h.url('region_show', countryCode='XXX', responseFormat='geojson')}".replace('XXX', countryCode), {
+    // Get json
+    $.get("${h.url('region_show', countryCode='XXX', responseFormat='json')}".replace('XXX', countryCode), {
         divisionLevel: divisionLevel
     }, function(data) {
         // Remove features
@@ -50,9 +46,15 @@ function updateMaps() {
             layerOL.destroy();
         }
         // Update controls
+        $('#divisionLevel').html('');
+        for (var i = 0; i < data.divisionLevelCount; i++) {
+            $('#divisionLevel').append('<option value=' + i + '>' + i + '</option>');
+        }
         // Update features
-        // Set center
-        mapOL.setCenter(new OpenLayers.LonLat(${c.mapCenter}), mapOL.getZoomForExtent(new OpenLayers.Bounds(${c.mapBox})) - 1);
+        layerOL = new OpenLayers.Layer.Vector(data.countryName);
+        layerOL.addFeatures(geoJSONReader.read(data.geojson));
+        mapOL.addLayer(layerOL);
+        mapOL.setCenter(new OpenLayers.LonLat(data.countryCenter), mapOL.getZoomForExtent(new OpenLayers.Bounds(data.countryBounds)) - 1);
     });
 }
 // Prepare page
