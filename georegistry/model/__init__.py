@@ -52,7 +52,7 @@ countries_table = sa.Table('countries', Base.metadata,
 )
 regions_table = sa.Table('regions', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('geometry', Geometry(MultiPolygon(2)), nullable=False),
+    sa.Column('geometry', Geometry, nullable=False),
     sa.Column('country_id', sa.ForeignKey('countries.id')),
     sa.Column('level', sa.Integer, nullable=False),
 )

@@ -12,6 +12,7 @@ from georegistry.lib import app_globals, helpers, store
 from georegistry.config.routing import make_map
 from georegistry.model import init_model
 
+
 def load_environment(global_conf, app_conf):
     'Configure the Pylons environment via the ``pylons.config`` object'
     # Set paths
@@ -39,9 +40,7 @@ def load_environment(global_conf, app_conf):
         imports=['from webhelpers.html import escape'])
     # Load safe
     config['safe'] = loadSafe(config['safe_path'])
-    # Load sqlalchemy.url
-    getDatabaseParameter = lambda x: config['safe']['database'][x]
-    config['sqlalchemy.url'] = config['sqlalchemy.url'].replace('${username}', getDatabaseParameter('username')).replace('${password}', getDatabaseParameter('password')).replace('${name}', getDatabaseParameter('name'))
+    config['sqlalchemy.url'] = patchSQLAlchemyURL(config['sqlalchemy.url'], config['safe'])
     # Setup the SQLAlchemy database engine
     engine = engine_from_config(config, 'sqlalchemy.')
     init_model(engine)
@@ -64,3 +63,11 @@ def loadSafe(safePath):
         valueByName[sectionName] = dict(configuration.items(sectionName)) 
     # Return
     return valueByName
+
+
+def patchSQLAlchemyURL(sqlalchemyURL, safe):
+    'Apply sensitive credentials'
+    # Define
+    getDBParameter = lambda x: safe['database'][x]
+    # Return
+    return sqlalchemyURL.replace('${username}', getDBParameter('username')).replace('${password}', getDBParameter('password')).replace('${name}', getDBParameter('name'))
