@@ -37,11 +37,14 @@ def load_environment(global_conf, app_conf):
         module_directory=os.path.join(app_conf['cache_dir'], 'templates'),
         input_encoding='utf-8', default_filters=['escape'],
         imports=['from webhelpers.html import escape'])
+    # Load safe
+    config['safe'] = loadSafe(config['safe_path'])
+    # Load sqlalchemy.url
+    getDatabaseParameter = lambda x: config['safe']['database'][x]
+    config['sqlalchemy.url'] = config['sqlalchemy.url'].replace('${username}', getDatabaseParameter('username')).replace('${password}', getDatabaseParameter('password')).replace('${name}', getDatabaseParameter('name'))
     # Setup the SQLAlchemy database engine
     engine = engine_from_config(config, 'sqlalchemy.')
     init_model(engine)
-    # Load safe
-    config['safe'] = loadSafe(config['safe_path'])
     # Return
     return config
     

@@ -3,6 +3,7 @@
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 import hashlib
+from geoalchemy import Geometry, MultiPolygon
 # Import custom modules
 from georegistry.model.meta import Session, Base
 from georegistry.config import parameter
@@ -43,6 +44,18 @@ person_candidates_table = sa.Table('person_candidates', Base.metadata,
     sa.Column('when_expired', sa.DateTime, nullable=False),
     sa.Column('person_id', sa.ForeignKey('people.id')),
 )
+countries_table = sa.Table('countries', Base.metadata,
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('name', sa.String(parameter.COUNTRY_NAME_LENGTH_MAXIMUM), nullable=False),
+    sa.Column('code_alpha2', sa.String(2), nullable=False),
+    sa.Column('code_alpha3', sa.String(3), nullable=False),
+)
+regions_table = sa.Table('regions', Base.metadata,
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('geometry', Geometry(MultiPolygon(2)), nullable=False),
+    sa.Column('country_id', sa.ForeignKey('countries.id')),
+    sa.Column('level', sa.Integer, nullable=False),
+)
 
 
 # Define classes
@@ -71,6 +84,21 @@ class CaseInsensitiveComparator(orm.properties.ColumnProperty.Comparator):
     def __eq__(self, other):
         return sa.func.lower(self.__clause_element__()) == sa.func.lower(other)
 
+class Country(object):
+
+    def __init__(self, name, code_alpha2, code_alpha3):
+        self.name = name
+        self.code_alpha2 = code_alpha2
+        self.code_alpha3 = code_alpha3
+
+
+class Region(object):
+
+    def __init__(self, geometry, country_id, level):
+        self.geometry = geometry
+        self.country_id = country_id
+        self.level = level
+
 
 # Map classes to tables
 
@@ -81,3 +109,7 @@ orm.mapper(Person, people_table, properties={
     'email_sms': orm.column_property(people_table.c.email_sms, comparator_factory=CaseInsensitiveComparator),
 })
 orm.mapper(PersonCandidate, person_candidates_table)
+orm.mapper(Country, countries_table, properties={
+    'regions': orm.relation(Region, backref='country'),
+})
+orm.mapper(Region, regions_table)

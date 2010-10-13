@@ -30,15 +30,15 @@ mapOL.addLayers([
 var geoJSONReader = new OpenLayers.Format.GeoJSON();
 // Define controls
 $('#countryCode').change(updateMaps);
-$('#divisionLevel').change(updateMaps);
+$('#regionLevel').change(updateMaps);
 // Define functions
 function updateMaps() {
     // Load parameters
     var countryCode = $('#countryCode').val();
-    var divisionLevel = $('#divisionLevel').val();
+    var regionLevel = $('#regionLevel').val();
     // Get json
     $.get("${h.url('region_show', countryCode='XXX', responseFormat='json')}".replace('XXX', countryCode), {
-        divisionLevel: divisionLevel
+        regionLevel: regionLevel
     }, function(data) {
         // Remove features
         if (layerOL) {
@@ -46,9 +46,9 @@ function updateMaps() {
             layerOL.destroy();
         }
         // Update controls
-        $('#divisionLevel').html('');
-        for (var i = 0; i < data.divisionLevelCount; i++) {
-            $('#divisionLevel').append('<option value=' + i + '>' + i + '</option>');
+        $('#regionLevel').html('');
+        for (var i = 0; i < data.regionLevelCount; i++) {
+            $('#regionLevel').append('<option value=' + i + '>' + i + '</option>');
         }
         // Update features
         layerOL = new OpenLayers.Layer.Vector(data.countryName);
@@ -71,7 +71,7 @@ updateMaps();
     >${countryName}</option>
 % endfor
 </select>
-<select id=divisionLevel>
+<select id=regionLevel>
     <option value=0 selected=selected>0</option>
 </select>
 </%def>

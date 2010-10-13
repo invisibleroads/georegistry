@@ -33,6 +33,15 @@ def traceParentPaths(folderPath):
         parentPath = os.path.dirname(parentPath) 
     return parentPaths 
 
+def replaceFileExtension(filePath, newExtension):
+    if not newExtension.startswith('.'): newExtension = '.' + newExtension
+    base = os.path.splitext(filePath)[0]
+    return base + newExtension
+
+def extractFileBaseName(filePath):
+    filename = os.path.split(filePath)[1]
+    return os.path.splitext(filename)[0]
+
 
 # Random
 
