@@ -3,17 +3,14 @@
 <%def name="title()">Regions</%def>
 
 <%def name="css()">
-#mapOL {position: absolute; top: 0; left: 0; width: 100%; height: 50%}
-#mapPM {position: absolute; bottom: 0; left: 0; width: 100%; height: 50%}
+#mapOL {position: absolute; top: 0; left: 0; width: 50%; height: 100%}
+#mapPM {position: absolute; top: 0; right: 0; width: 50%; height: 100%}
 </%def>
 
 <%def name="head()">
-// Load OpenLayers
 ${h.stylesheet_link('/files/openlayers/theme/default/style.css')}
 ${h.stylesheet_link('/files/openlayers/theme/default/google.css')}
 ${h.javascript_link('/files/openlayers/OpenLayers.js')}
-// Load PolyMaps
-// Load GoogleMaps
 ${h.javascript_link('http://maps.google.com/maps/api/js?sensor=false')}
 </%def>
 
@@ -28,6 +25,23 @@ mapOL.addLayers([
     new OpenLayers.Layer.Google("Google Satellite", {type: google.maps.MapTypeId.SATELLITE, numZoomLevels: 22})
 ]);
 var geoJSONReader = new OpenLayers.Format.GeoJSON();
+// Define styles
+<%text>
+var colors = ["red", "green", "blue", "yellow", "cyan", "magenta"];
+var countryStyle = new OpenLayers.StyleMap(new OpenLayers.Style(
+    {
+        fillColor: "${getColor}",
+        fillOpacity: 0.1
+    }, 
+    {
+        context: {
+            getColor: function(feature) {
+                return colors[getNumber(feature.id) % colors.length];
+            }
+        }
+    }
+));
+</%text>
 // Define controls
 $('#countryCode').change(updateMaps);
 $('#regionLevel').change(updateMaps);
@@ -37,7 +51,20 @@ function updateMaps() {
     var countryCode = $('#countryCode').val();
     var regionLevel = $('#regionLevel').val();
     // Get json
-    $.get("${h.url('region_show', countryCode='XXX', responseFormat='json')}".replace('XXX', countryCode), {
+    $.get("${h.url('region_show', countryCode='XXX', responseFormat='json')}".replace('XXX', countryCode), function(data) {
+        // Verify
+        if (!data.isOk) {alert(data.message); return;}
+        // Update controls
+        $('#regionLevel').html('');
+        for (var i = 0; i < data.regionLevelCount; i++) {
+            $('#regionLevel').append('<option value=' + i + '>' + i + '</option>');
+        }
+        $('#regionLevel').val(regionLevel);
+        // Update features
+        mapOL.setCenter(new OpenLayers.LonLat(data.countryLongitude, data.countryLatitude), mapOL.getZoomForExtent(new OpenLayers.Bounds(data.countryLeft, data.countryBottom, data.countryRight, data.countryTop)));
+    }, 'json');
+    // Get geojson
+    $.get("${h.url('region_show', countryCode='XXX', responseFormat='geojson')}".replace('XXX', countryCode), {
         regionLevel: regionLevel
     }, function(data) {
         // Remove features
@@ -45,17 +72,10 @@ function updateMaps() {
             mapOL.removeLayer(layerOL);
             layerOL.destroy();
         }
-        // Update controls
-        $('#regionLevel').html('');
-        for (var i = 0; i < data.regionLevelCount; i++) {
-            $('#regionLevel').append('<option value=' + i + '>' + i + '</option>');
-        }
-        // Update features
-        layerOL = new OpenLayers.Layer.Vector(data.countryName);
-        layerOL.addFeatures(geoJSONReader.read(data.geojson));
+        layerOL = new OpenLayers.Layer.Vector(countryCode, {styleMap: countryStyle});
+        layerOL.addFeatures(geoJSONReader.read(data));
         mapOL.addLayer(layerOL);
-        mapOL.setCenter(new OpenLayers.LonLat(data.countryCenter), mapOL.getZoomForExtent(new OpenLayers.Bounds(data.countryBounds)) - 1);
-    });
+    }, 'json');
 }
 // Prepare page
 updateMaps();

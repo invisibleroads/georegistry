@@ -12,6 +12,7 @@ import csv
 import glob
 import osgeo.osr
 import geoalchemy
+import shapely.geometry
 # Import custom modules
 import script_process
 from georegistry import model
@@ -42,10 +43,20 @@ def run(shapePath):
     # For each geometry,
     for geometry in geometries:
         # Prepare
-        geometry = geoalchemy.WKTSpatialElement(geometry.wkt)
-        # Create
+        geometry = geoalchemy.WKBSpatialElement(buffer(geometry.wkb), srid)
+        # Add region
         Session.add(model.Region(geometry, country.id, level))
         regionCount += 1
+    # If we are looking at the country outline,
+    if level == 0:
+        # Merge geometries
+        countryGeometry = reduce(lambda x, y: x.union(y), geometries)
+        # Compute center
+        country.center = geoalchemy.WKBSpatialElement(buffer(countryGeometry.centroid.wkb), srid)
+        # Compute bounds
+        left, bottom, right, top = countryGeometry.bounds
+        country.bound_lb = geoalchemy.WKBSpatialElement(buffer(shapely.geometry.Point(left, bottom).wkb), srid)
+        country.bound_rt = geoalchemy.WKBSpatialElement(buffer(shapely.geometry.Point(right, top).wkb), srid)
     # Commit
     Session.commit()
     # Return

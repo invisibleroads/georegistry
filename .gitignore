@@ -1,3 +1,4 @@
 .development.cfg
 .production.cfg
 *.pyc
+data

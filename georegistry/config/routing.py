@@ -28,8 +28,8 @@ def make_map(config):
     map.connect('person_reset', '/people/reset', controller='people', action='reset')
     # Map regions
     map.connect('region_index_plain', '/regions', controller='regions', action='index')
-    map.connect('region_index', '/regions.{responseFormat}', controller='regions', action='index')
-    map.connect('region_show_plain', '/regions/{countryCode}', controller='regions', action='show')
-    map.connect('region_show', '/regions/{countryCode}.{responseFormat}', controller='regions', action='show')
+    map.connect('region_index', '/regions.:(responseFormat)', controller='regions', action='index')
+    map.connect('region_show', '/regions/:(countryCode).:(responseFormat)', controller='regions', action='show')
+    map.connect('region_show_plain', '/regions/:(countryCode)', controller='regions', action='show')
     # Return
     return map

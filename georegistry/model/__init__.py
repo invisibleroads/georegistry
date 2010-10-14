@@ -4,6 +4,8 @@ import sqlalchemy as sa
 import sqlalchemy.orm as orm
 import hashlib
 import geoalchemy
+import geoalchemy.postgis
+import shapely.wkb
 # Import custom modules
 from georegistry.model.meta import Session, Base
 from georegistry.config import parameter
@@ -49,10 +51,13 @@ countries_table = sa.Table('countries', Base.metadata,
     sa.Column('name', sa.String(parameter.COUNTRY_NAME_LENGTH_MAXIMUM), nullable=False),
     sa.Column('code_alpha2', sa.String(2), nullable=False),
     sa.Column('code_alpha3', sa.String(3), nullable=False),
+    geoalchemy.GeometryExtensionColumn('center', geoalchemy.Point(srid=900913)),
+    geoalchemy.GeometryExtensionColumn('bound_lb', geoalchemy.Point(srid=900913)),
+    geoalchemy.GeometryExtensionColumn('bound_rt', geoalchemy.Point(srid=900913)),
 )
 regions_table = sa.Table('regions', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('geometry', geoalchemy.Geometry, nullable=False),
+    geoalchemy.GeometryExtensionColumn('geometry', geoalchemy.Geometry(srid=900913), nullable=False),
     sa.Column('country_id', sa.ForeignKey('countries.id')),
     sa.Column('level', sa.Integer, nullable=False),
 )
@@ -92,6 +97,15 @@ class Country(object):
         self.code_alpha2 = code_alpha2
         self.code_alpha3 = code_alpha3
 
+    def getCenter(self):
+        center = shapely.wkb.loads(str(self.center.geom_wkb))
+        return center.x, center.y
+
+    def getBox(self):
+        bound_lb = shapely.wkb.loads(str(self.bound_lb.geom_wkb))
+        bound_rt = shapely.wkb.loads(str(self.bound_rt.geom_wkb))
+        return bound_lb.x, bound_lb.y, bound_rt.x, bound_rt.y
+
 
 class Region(object):
 
@@ -112,8 +126,13 @@ orm.mapper(Person, people_table, properties={
 orm.mapper(PersonCandidate, person_candidates_table)
 orm.mapper(Country, countries_table, properties={
     'regions': orm.relation(Region, backref='country'),
+    'center': geoalchemy.GeometryColumn(countries_table.c.center, comparator=geoalchemy.postgis.PGComparator),
+    'bound_lb': geoalchemy.GeometryColumn(countries_table.c.bound_lb, comparator=geoalchemy.postgis.PGComparator),
+    'bound_rt': geoalchemy.GeometryColumn(countries_table.c.bound_rt, comparator=geoalchemy.postgis.PGComparator),
 })
-orm.mapper(Region, regions_table)
+orm.mapper(Region, regions_table, properties={
+    'geometry': geoalchemy.GeometryColumn(regions_table.c.geometry, comparator=geoalchemy.postgis.PGComparator),
+})
 
 
 # Set DDLs

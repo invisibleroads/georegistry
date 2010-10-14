@@ -21,6 +21,7 @@ $(document).ready(function() {
         function () {this.className = this.className.replace('ON', 'OFF');}
     );
     function getID(obj) {return /\d+/.exec(obj.id)[0]}
+    function getNumber(x) {return /\d+/.exec(x)[0]}
     ${self.js()}\
 });
 </script>
