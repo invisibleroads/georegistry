@@ -3,7 +3,7 @@
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 import hashlib
-from geoalchemy import Geometry, MultiPolygon
+import geoalchemy
 # Import custom modules
 from georegistry.model.meta import Session, Base
 from georegistry.config import parameter
@@ -52,7 +52,7 @@ countries_table = sa.Table('countries', Base.metadata,
 )
 regions_table = sa.Table('regions', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('geometry', Geometry, nullable=False),
+    sa.Column('geometry', geoalchemy.Geometry, nullable=False),
     sa.Column('country_id', sa.ForeignKey('countries.id')),
     sa.Column('level', sa.Integer, nullable=False),
 )
@@ -84,6 +84,7 @@ class CaseInsensitiveComparator(orm.properties.ColumnProperty.Comparator):
     def __eq__(self, other):
         return sa.func.lower(self.__clause_element__()) == sa.func.lower(other)
 
+
 class Country(object):
 
     def __init__(self, name, code_alpha2, code_alpha3):
@@ -113,3 +114,8 @@ orm.mapper(Country, countries_table, properties={
     'regions': orm.relation(Region, backref='country'),
 })
 orm.mapper(Region, regions_table)
+
+
+# Set DDLs
+geoalchemy.GeometryDDL(countries_table)
+geoalchemy.GeometryDDL(regions_table)
