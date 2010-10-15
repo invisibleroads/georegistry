@@ -10,7 +10,7 @@ Install geospatial libraries
 
     su
         yum install gdal gdal-python geos proj
-        easy_install -U geoalchemy geojson shapely
+        easy_install -U geoalchemy geojson pylons shapely
 
 
 Install PostgreSQL
