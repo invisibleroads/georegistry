@@ -1,10 +1,10 @@
 #
-# georegistry - Pylons development environment configuration
+# georegistry - Pylons configuration
 #
 # The %(here)s variable will be replaced with the parent directory of this file
 #
 [DEFAULT]
-debug = true
+debug = false
 email_to =
 error_email_from = support@example.com
 smtp_server = localhost
@@ -14,7 +14,7 @@ smtp_server = localhost
 
 [server:main]
 use = egg:Paste#http
-host = 127.0.0.1
+host = 0.0.0.0
 port = 5000
 
 [app:main]
@@ -22,38 +22,26 @@ use = egg:georegistry
 full_stack = true
 static_files = true
 cache_dir = %(here)s/data
+app_instance_uuid = ${app_instance_uuid}
 beaker.session.key = georegistry
-beaker.session.secret = somesecret
-sqlalchemy.url = sqlite:///%(here)s/development.db
+beaker.session.secret = ${app_instance_secret}
+sqlalchemy.url = sqlite:///production.db
 # recaptcha.public =
 # recaptcha.private =
 
 [loggers]
-keys = root, routes, georegistry, sqlalchemy
+keys = root
 [handlers]
 keys = console
 [formatters]
 keys = generic
 [logger_root]
-level = INFO
+level = WARN
 handlers = console
-[logger_routes]
-level = INFO
-handlers =
-qualname = routes.middleware
-[logger_georegistry]
-level = DEBUG
-handlers =
-qualname = georegistry
-[logger_sqlalchemy]
-level = INFO
-handlers =
-qualname = sqlalchemy.engine
 [handler_console]
 class = StreamHandler
 args = (sys.stderr,)
 level = NOTSET
 formatter = generic
 [formatter_generic]
-format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] [%(threadName)s] %(message)s
-datefmt = %H:%M:%S
+format = %(asctime)s %(levelname)-5.5s [%(name)s] [%(threadName)s] %(message)s

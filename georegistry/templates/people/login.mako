@@ -47,7 +47,7 @@ function ajax_login() {
             rejection_count = data.rejection_count ? data.rejection_count : rejection_count + 1;
             // If there have been too many rejections,
             if (rejection_count >= ${h.REJECTION_LIMIT}) {
-                Recaptcha.create("${c.publicKey}", 'recaptcha', {
+                Recaptcha.create("${c.recaptchaPublicKey}", 'recaptcha', {
                     theme: 'red',
                     callback: Recaptcha.focus_response_field
                 });

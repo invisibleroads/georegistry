@@ -17,6 +17,7 @@ import sys
 DEFAULT_VERSION = "0.6c9"
 DEFAULT_URL     = "http://pypi.python.org/packages/%s/s/setuptools/" % sys.version[:3]
 
+
 md5_data = {
     'setuptools-0.6b1-py2.3.egg': '8822caf901250d848b996b7f25c6e6ca',
     'setuptools-0.6b1-py2.4.egg': 'b79a8a403e4502fbb85ee3f1941735cb',
@@ -54,9 +55,11 @@ md5_data = {
     'setuptools-0.6c9-py2.6.egg': 'ca37b1ff16fa2ede6e19383e7b59245a',
 }
 
+
 import sys, os
 try: from hashlib import md5
 except ImportError: from md5 import md5
+
 
 def _validate_md5(egg_name, data):
     if egg_name in md5_data:
@@ -68,6 +71,7 @@ def _validate_md5(egg_name, data):
             )
             sys.exit(2)
     return data
+
 
 def use_setuptools(
     version=DEFAULT_VERSION, download_base=DEFAULT_URL, to_dir=os.curdir,
@@ -109,6 +113,7 @@ def use_setuptools(
             return do_download()
     except pkg_resources.DistributionNotFound:
         return do_download()
+
 
 def download_setuptools(
     version=DEFAULT_VERSION, download_base=DEFAULT_URL, to_dir=os.curdir,
@@ -158,40 +163,6 @@ and place it in this directory before rerunning this script.)
     return os.path.realpath(saveto)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def main(argv, version=DEFAULT_VERSION):
     """Install or upgrade setuptools and EasyInstall"""
     try:
@@ -232,6 +203,7 @@ def main(argv, version=DEFAULT_VERSION):
         else:
             print "Setuptools version",version,"or greater has been installed."
             print '(Run "ez_setup.py -U setuptools" to reinstall or upgrade.)'
+
 
 def update_md5(filenames):
     """Update our built-in md5 registry"""

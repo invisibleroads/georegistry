@@ -1,12 +1,10 @@
-"""The base Controller API
-
-Provides the BaseController class for subclassing.
-"""
+'Base Controller API'
 # Import pylons modules
 from pylons.controllers import WSGIController
 from pylons.templating import render_mako as render
 # Import custom modules
 from georegistry.model.meta import Session
+
 
 class BaseController(WSGIController):
 

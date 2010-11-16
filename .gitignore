@@ -1,4 +1,4 @@
-.development.cfg
-.production.cfg
-*.pyc
 data
+production.ini
+*.pyc
+*.swp

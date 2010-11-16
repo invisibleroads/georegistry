@@ -19,6 +19,9 @@ def decodeURL(x):
 def isPerson():
     return 1 if 'personID' in session else 0
 
+def isPersonSuper():
+    return 1 if session.get('is_super', False) else 0
+
 def getPersonID():
     return session.get('personID', 0)
 

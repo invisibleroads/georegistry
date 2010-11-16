@@ -71,7 +71,6 @@ $('#username').focus();
 ${'Register for an account' if c.isNew else 'Update your account'}
 </%def>
 
-
 <table>
     <tr>
         <td class=label><label for=username>Username</label></td>

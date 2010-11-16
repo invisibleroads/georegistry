@@ -2,8 +2,6 @@
 # Import system modules
 import os
 import random
-import cPickle as pickle
-import cStringIO as StringIO
 
 
 # File
@@ -85,12 +83,3 @@ def reduceSets(packs, itemName):
         return set()
     items = [x[itemName] for x in packs]
     return reduce(lambda x, y: x.union(y), items)
-
-
-# Pickle
-
-def setPickle(x):
-    return pickle.dumps(x, protocol=2)
-
-def getPickle(pickled_x):
-    return pickle.load(StringIO.StringIO(pickled_x))

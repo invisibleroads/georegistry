@@ -20,8 +20,8 @@ $(document).ready(function() {
         function () {this.className = this.className.replace('OFF', 'ON');}, 
         function () {this.className = this.className.replace('ON', 'OFF');}
     );
-    function getID(obj) {return /\d+/.exec(obj.id)[0]}
     function getNumber(x) {return /\d+/.exec(x)[0]}
+    function getID(obj) {return getNumber(obj.id)}
     ${self.js()}\
 });
 </script>

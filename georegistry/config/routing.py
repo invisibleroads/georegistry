@@ -2,6 +2,7 @@
 # Import pylons modules
 from routes import Mapper
 
+
 def make_map(config):
     'Create, configure and return the routes mapper'
     # Initialize map
@@ -31,5 +32,7 @@ def make_map(config):
     map.connect('region_index', '/regions.:(responseFormat)', controller='regions', action='index')
     map.connect('region_show', '/regions/:(countryCode).:(responseFormat)', controller='regions', action='show')
     map.connect('region_show_plain', '/regions/:(countryCode)', controller='regions', action='show')
+    # Redirect index
+    map.redirect('/', '/regions')
     # Return
     return map

@@ -5,10 +5,9 @@ from pylons.error import handle_mako_error
 from mako.lookup import TemplateLookup
 # Import system modules
 import os
-import ConfigParser
 from sqlalchemy import engine_from_config
 # Import custom modules
-from georegistry.lib import app_globals, helpers, store
+from georegistry.lib import app_globals, helpers
 from georegistry.config.routing import make_map
 from georegistry.model import init_model
 
@@ -38,36 +37,8 @@ def load_environment(global_conf, app_conf):
         module_directory=os.path.join(app_conf['cache_dir'], 'templates'),
         input_encoding='utf-8', default_filters=['escape'],
         imports=['from webhelpers.html import escape'])
-    # Load safe
-    config['safe'] = loadSafe(config['safe_path'])
-    config['sqlalchemy.url'] = patchSQLAlchemyURL(config['sqlalchemy.url'], config['safe'])
     # Setup the SQLAlchemy database engine
     engine = engine_from_config(config, 'sqlalchemy.')
     init_model(engine)
     # Return
     return config
-    
-
-def loadSafe(safePath):
-    'Load information that we do not want to include in the repository'
-    # Validate
-    if not os.path.exists(safePath):
-        print 'Missing configuration: ' + safePath
-        safePath = store.expandBasePath('default.cfg')
-    # Initialize
-    valueByName = {}
-    # Load
-    configuration = ConfigParser.ConfigParser() 
-    configuration.read(safePath)
-    for sectionName in configuration.sections(): 
-        valueByName[sectionName] = dict(configuration.items(sectionName)) 
-    # Return
-    return valueByName
-
-
-def patchSQLAlchemyURL(sqlalchemyURL, safe):
-    'Apply sensitive credentials'
-    # Define
-    getDBParameter = lambda x: safe['database'][x]
-    # Return
-    return sqlalchemyURL.replace('${username}', getDBParameter('username')).replace('${password}', getDBParameter('password')).replace('${name}', getDBParameter('name'))

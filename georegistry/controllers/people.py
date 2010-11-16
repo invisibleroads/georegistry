@@ -7,12 +7,13 @@ import formencode
 # Import system modules
 import recaptcha.client.captcha as captcha
 import cStringIO as StringIO
+import sqlalchemy as sa
 import datetime
 # Import custom modules
 from georegistry import model
 from georegistry.model import Session
 from georegistry.config import parameter
-from georegistry.lib import smtp, store, helpers as h
+from georegistry.lib import helpers as h, store, smtp
 from georegistry.lib.base import BaseController, render
 
 
@@ -32,7 +33,7 @@ class PeopleController(BaseController):
     @jsonify
     def register_(self):
         'Store proposed changes and send confirmation email'
-        return changeAccount(dict(request.POST), 'registration', '/people/confirm.mako')
+        return changePerson(dict(request.POST), 'registration', '/people/confirm.mako')
 
     def confirm(self, ticket):
         'Confirm changes'
@@ -76,13 +77,13 @@ class PeopleController(BaseController):
         # Prepare
         person = Session.query(model.Person).get(personID)
         # Return
-        return changeAccount(dict(request.POST), 'update', '/people/confirm.mako', person)
+        return changePerson(dict(request.POST), 'update', '/people/confirm.mako', person)
 
     def login(self, targetURL=h.encodeURL('/')):
         'Show login form'
         c.messageCode = request.GET.get('messageCode')
         c.targetURL = h.decodeURL(targetURL)
-        c.publicKey = config['safe']['recaptcha']['public']
+        c.recaptchaPublicKey = config.get('recaptcha.public', '')
         return render('/people/login.mako')
 
     @jsonify
@@ -107,9 +108,9 @@ class PeopleController(BaseController):
             # Expect recaptcha response
             recaptchaChallenge = request.POST.get('recaptcha_challenge_field', '')
             recaptchaResponse = request.POST.get('recaptcha_response_field', '')
-            recaptchaKey = config['safe']['recaptcha']['private']
+            recaptchaPrivateKey = config.get('recaptcha.private', '')
             # Validate
-            result = captcha.submit(recaptchaChallenge, recaptchaResponse, recaptchaKey, h.getRemoteIP())
+            result = captcha.submit(recaptchaChallenge, recaptchaResponse, recaptchaPrivateKey, h.getRemoteIP())
             # If the response is not valid,
             if not result.is_valid:
                 return dict(isOk=0, rejection_count=person.rejection_count)
@@ -119,6 +120,7 @@ class PeopleController(BaseController):
         session['minutesOffset'] = minutesOffset
         session['personID'] = person.id
         session['nickname'] = person.nickname
+        session['is_super'] = person.is_super
         session.save()
         # Save person
         person.minutes_offset = minutesOffset
@@ -134,6 +136,7 @@ class PeopleController(BaseController):
             del session['minutesOffset']
             del session['personID']
             del session['nickname']
+            del session['is_super']
             session.save()
         # Redirect
         return redirect(url(h.decodeURL(targetURL)))
@@ -150,13 +153,70 @@ class PeopleController(BaseController):
             return dict(isOk=0)
         # Reset account
         c.password = store.makeRandomAlphaNumericString(parameter.PASSWORD_LENGTH_AVERAGE)
-        return changeAccount(dict(
-            username=person.username,
-            password=c.password,
-            nickname=person.nickname,
-            email=person.email,
-            email_sms=person.email_sms,
-        ), 'reset', '/people/confirm.mako', person)
+        return changePerson(dict(username=person.username, password=c.password, nickname=person.nickname, email=person.email, email_sms=person.email_sms), 'reset', '/people/confirm.mako', person)
+
+
+# Helpers
+
+def changePerson(valueByName, action, templatePath, person=None):
+    'Validate values and send confirmation email if values are okay'
+    # Validate form
+    try:
+        form = PersonForm().to_python(valueByName, person)
+    except formencode.Invalid, error:
+        return dict(isOk=0, errorByID=error.unpack_errors())
+    # Prepare candidate
+    candidate = model.PersonCandidate(form['username'], model.hashString(form['password']), form['nickname'], form['email'], form['email_sms'])
+    candidate.person_id = person.id if person else None
+    candidate.ticket = store.makeRandomUniqueTicket(parameter.TICKET_LENGTH, Session.query(model.PersonCandidate))
+    candidate.when_expired = datetime.datetime.utcnow() + datetime.timedelta(days=parameter.TICKET_LIFESPAN_IN_DAYS)
+    Session.add(candidate) 
+    Session.commit()
+    # Send confirmation
+    toByValue = dict(nickname=form['nickname'], email=form['email'])
+    subject = '[%s] Confirm %s' % (parameter.SITE_NAME, action)
+    c.candidate = candidate
+    c.username = form['username']
+    c.action = action
+    body = render(templatePath)
+    try:
+        smtp.sendMessage(dict(email=config['error_email_from'], smtp=config['smtp_server'], username=config.get('smtp_username', ''), password=config.get('smtp_password', ''), nickname=parameter.SITE_NAME + ' Support'), toByValue, subject, body)
+    except smtp.SMTPError:
+        return dict(isOk=0, errorByID={'status': 'Unable to send confirmation; please try again later.'})
+    # Return
+    return dict(isOk=1)
+
+def confirmPersonCandidate(ticket):
+    'Move changes from the PersonCandidate table into the Person table'
+    # Initialize
+    matchedCandidateFilter = model.PersonCandidate.ticket==ticket
+    expiredCandidateFilter = model.PersonCandidate.when_expired < datetime.datetime.utcnow()
+    candidate = Session.query(model.PersonCandidate).filter(matchedCandidateFilter & sa.not_(expiredCandidateFilter)).first()
+    # If the ticket exists,
+    if candidate:
+        # Prepare
+        similarCandidateFilter = (model.PersonCandidate.username == candidate.username) | (model.PersonCandidate.nickname == candidate.nickname) | (model.PersonCandidate.email == candidate.email)
+        # Delete expired or similar candidates
+        Session.query(model.PersonCandidate).filter(expiredCandidateFilter | similarCandidateFilter).delete()
+        # If the person exists,
+        if candidate.person_id:
+            # Update
+            person = Session.query(model.Person).get(candidate.person_id)
+            person.username = candidate.username
+            person.password_hash = candidate.password_hash
+            person.nickname = candidate.nickname
+            person.email = candidate.email
+            person.email_sms = candidate.email_sms
+            # Reset
+            person.rejection_count = 0
+        # If the person does not exist,
+        else:
+            # Add person
+            Session.add(model.Person(candidate.username, candidate.password_hash, candidate.nickname, candidate.email, candidate.email_sms))
+        # Commit
+        Session.commit()
+    # Return
+    return candidate
 
 
 # Validators
@@ -181,7 +241,6 @@ class Unique(formencode.validators.FancyValidator):
         # Return
         return value
 
-
 class SecurePassword(formencode.validators.FancyValidator):
     'Validator to prevent weak passwords'
 
@@ -191,9 +250,8 @@ class SecurePassword(formencode.validators.FancyValidator):
             raise formencode.Invalid('That password needs more variety', value, person)
         return value
 
-
 class PersonForm(formencode.Schema):
-    'Validate user credentials'
+    'Validate person credentials'
 
     username = formencode.All(
         formencode.validators.String(
@@ -221,76 +279,4 @@ class PersonForm(formencode.Schema):
         formencode.validators.Email(not_empty=True),
         Unique('email', 'That email is reserved for another account'),
     )
-    email_sms = formencode.All(
-        formencode.validators.Email(),
-        Unique('email_sms', 'That SMS address is reserved for another account'),
-    )
-
-
-# Helpers
-
-def changeAccount(valueByName, action, templatePath, person=None):
-    'Validate values and send confirmation email if values are okay'
-    try:
-        # Validate form
-        form = PersonForm().to_python(valueByName, person)
-    except formencode.Invalid, error:
-        return dict(isOk=0, errorByID=error.unpack_errors())
-    else:
-        # Purge expired candidates
-        purgeExpiredPersonCandidates()
-        # Prepare candidate
-        candidate = model.PersonCandidate(form['username'], model.hashString(form['password']), form['nickname'], form['email'], form['email_sms'])
-        candidate.person_id = person.id if person else None
-        candidate.ticket = store.makeRandomUniqueTicket(parameter.TICKET_LENGTH, Session.query(model.PersonCandidate))
-        candidate.when_expired = datetime.datetime.utcnow() + datetime.timedelta(days=parameter.TICKET_LIFESPAN_IN_DAYS)
-        Session.add(candidate) 
-        Session.commit()
-        # Prepare recipient
-        toByValue = dict(nickname=form['nickname'], email=form['email'])
-        # Prepare subject
-        subject = '[%s] Confirm %s' % (parameter.SITE_NAME, action)
-        # Prepare body
-        c.candidate = candidate
-        c.username = form['username']
-        c.action = action
-        body = render(templatePath)
-        # Send
-        try:
-            smtp.sendMessage(config['safe']['mail support'], toByValue, subject, body)
-        except smtp.SMTPError:
-            return dict(isOk=0, errorByID={'status': 'Unable to send confirmation; please try again later.'})
-        # Return
-        return dict(isOk=1)
-
-def purgeExpiredPersonCandidates():
-    'Delete candidates that have expired'
-    Session.execute(model.person_candidates_table.delete().where(model.PersonCandidate.when_expired<datetime.datetime.utcnow()))
-
-def confirmPersonCandidate(ticket):
-    'Move changes from the PersonCandidate table into the Person table'
-    # Query
-    candidate = Session.query(model.PersonCandidate).filter(model.PersonCandidate.ticket==ticket).filter(model.PersonCandidate.when_expired>=datetime.datetime.utcnow()).first()
-    # If the ticket exists,
-    if candidate:
-        # If the person exists,
-        if candidate.person_id:
-            # Update person
-            person = Session.query(model.Person).get(candidate.person_id)
-            person.username = candidate.username
-            person.password_hash = candidate.password_hash
-            person.nickname = candidate.nickname
-            person.email = candidate.email
-            person.email_sms = candidate.email_sms
-            # Reset rejection_count
-            person.rejection_count = 0
-        # If the person does not exist,
-        else:
-            # Add person
-            Session.add(model.Person(candidate.username, candidate.password_hash, candidate.nickname, candidate.email, candidate.email_sms))
-        # Delete ticket
-        Session.delete(candidate)
-        # Commit
-        Session.commit()
-    # Return
-    return candidate
+    email_sms = formencode.validators.Email()

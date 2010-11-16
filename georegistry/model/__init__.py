@@ -33,7 +33,7 @@ people_table = sa.Table('people', Base.metadata,
     sa.Column('email_sms', sa.String(parameter.EMAIL_LENGTH_MAXIMUM)),
     sa.Column('minutes_offset', sa.Integer, default=0),
     sa.Column('rejection_count', sa.Integer, default=0),
-    sa.Column('pickled', sa.LargeBinary),
+    sa.Column('is_super', sa.Boolean, default=False),
 )
 person_candidates_table = sa.Table('person_candidates', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
