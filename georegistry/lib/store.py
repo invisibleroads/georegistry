@@ -32,9 +32,9 @@ def traceParentPaths(folderPath):
     return parentPaths 
 
 def replaceFileExtension(filePath, newExtension):
-    if not newExtension.startswith('.'): newExtension = '.' + newExtension
-    base = os.path.splitext(filePath)[0]
-    return base + newExtension
+    if not newExtension.startswith('.'): 
+        newExtension = '.' + newExtension
+    return os.path.splitext(filePath)[0] + newExtension
 
 def extractFileBaseName(filePath):
     filename = os.path.split(filePath)[1]
