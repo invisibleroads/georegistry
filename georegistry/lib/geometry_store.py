@@ -1,4 +1,3 @@
-# Implement unit tests in a separate file
 'GDAL wrapper for reading and writing geospatial data'
 # Import system modules
 import os
