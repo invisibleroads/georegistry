@@ -9,7 +9,6 @@ import geojson
 # Import custom modules
 from georegistry import model
 from georegistry.model import Session
-from georegistry.lib import geometry_store
 from georegistry.lib.base import BaseController, render
 
 
