@@ -36,7 +36,7 @@ def run(shapePath):
         Session.add(country)
         Session.commit()
     # Load geometries
-    geometries, proj4 = geometry_store.load(shapePath)
+    proj4, geometries = geometry_store.load(shapePath)[:2]
     # Initialize
     srid = sridByProj4[simplifyProj(proj4)]
     regionCount = 0
