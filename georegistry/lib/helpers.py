@@ -10,12 +10,6 @@ from georegistry.config.parameter import *
 from georegistry.lib import whenIO
 
 
-def encodeURL(x):
-    return x.replace('/', '~')
-
-def decodeURL(x):
-    return str(x.replace('~', '/'))
-
 def isPerson():
     return 1 if 'personID' in session else 0
 

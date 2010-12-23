@@ -74,12 +74,3 @@ def makeRandomUniqueTicket(length, query):
         # If our randomID is unique, return it
         if not query.filter_by(ticket=randomID).first(): 
             return randomID
-
-
-# Reduce
-
-def reduceSets(packs, itemName):
-    if not packs:
-        return set()
-    items = [x[itemName] for x in packs]
-    return reduce(lambda x, y: x.union(y), items)

@@ -5,7 +5,7 @@
 #
 [DEFAULT]
 debug = false
-email_to =
+email_to = support@example.com
 error_email_from = support@example.com
 smtp_server = localhost
 # smtp_username = 
@@ -28,6 +28,10 @@ beaker.session.secret = ${app_instance_secret}
 sqlalchemy.url = sqlite:///production.db
 # recaptcha.public =
 # recaptcha.private =
+sms.imap_email = 
+sms.imap_server = 
+# sms.imap_username = 
+# sms.imap_password = 
 
 [loggers]
 keys = root

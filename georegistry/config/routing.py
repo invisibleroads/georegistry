@@ -16,16 +16,14 @@ def make_map(config):
     map.connect('/errors/{action}/{id}', controller='errors')
     # Map people
     map.connect('person_index', '/people', controller='people', action='index')
-    map.connect('person_register', '/people/register', controller='people', action='register')
-    map.connect('person_register_', '/people/register_', controller='people', action='register_')
+    map.connect('person_register', '/people/register', controller='people', action='register', conditions=GET)
+    map.connect('person_register', '/people/register', controller='people', action='register_', conditions=POST)
     map.connect('person_confirm', '/people/confirm/{ticket}', controller='people', action='confirm')
-    map.connect('person_login', '/people/login/{targetURL}', controller='people', action='login')
-    map.connect('person_login_plain', '/people/login', controller='people', action='login')
-    map.connect('person_login_', '/people/login_', controller='people', action='login_')
-    map.connect('person_update', '/people/update', controller='people', action='update')
-    map.connect('person_update_', '/people/update_', controller='people', action='update_')
-    map.connect('person_logout_plain', '/people/logout', controller='people', action='logout') 
-    map.connect('person_logout', '/people/logout/{targetURL}', controller='people', action='logout')
+    map.connect('person_login', '/people/login', controller='people', action='login', conditions=GET)
+    map.connect('person_login', '/people/login', controller='people', action='login_', conditions=POST)
+    map.connect('person_update', '/people/update', controller='people', action='update', conditions=GET)
+    map.connect('person_update', '/people/update', controller='people', action='update_', conditions=POST)
+    map.connect('person_logout', '/people/logout', controller='people', action='logout')
     map.connect('person_reset', '/people/reset', controller='people', action='reset')
     # Map regions
     map.connect('region_index_plain', '/regions', controller='regions', action='index')
@@ -36,3 +34,8 @@ def make_map(config):
     map.redirect('/', '/regions')
     # Return
     return map
+
+
+# Set constants
+GET = dict(method=['GET'])
+POST = dict(method=['POST'])

@@ -15,7 +15,7 @@ def requireLogin(func, *args, **kwargs):
     'Redirect to login if the user is not logged in'
     # If the user is not logged in,
     if not h.isPerson():
-        return redirect(url('person_login', targetURL=h.encodeURL(request.path)))
+        return redirect(url('person_login', url=request.path))
     # Execute
     return func(*args, **kwargs)
 
@@ -36,7 +36,7 @@ def requireSuper(func, *args, **kwargs):
     'Redirect to homepage if the user is not a superuser'
     # If the user is not a superuser,
     if not h.isPersonSuper():
-        return redirect(url('person_login', targetURL=h.encodeURL('/')))
+        return redirect(url('person_login', url='/'))
     # Execute
     return func(*args, **kwargs)
 

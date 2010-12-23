@@ -4,66 +4,98 @@
 
 <%def name="css()">
 .field {width: 15em}
+.inactive {color: gray}
 </%def>
 
 <%def name="js()">
+// Save descriptions
 function getMessageObj(id) { return $('#m_' + id); }
-var ids = ['nickname', 'username', 'password', 'password2', 'email', 'email_sms', 'status'];
+var ids = ['username', 'password', 'nickname', 'email', 'status'];
 var defaultByID = {};
 for (var i=0; i<ids.length; i++) {
     var id = ids[i];
     defaultByID[id] = getMessageObj(id).html();
 }
+// Define button behavior
 function showFeedback(messageByID) {
+    var hasFocus = false;
     for (var i = 0; i < ids.length; i++) {
         var id = ids[i];
         var o = getMessageObj(id);
         if (messageByID[id]) {
             o.html('<b>' + messageByID[id] + '</b>');
+            if (!hasFocus) {
+                $('#' + id).focus();
+                hasFocus = true;
+            }
         } else {
             o.html(defaultByID[id]);
         }
     }
 }
-$('#buttonSave').click(function() {
-    // Get
+function ajax_save() {
     var username = $('#username').val(),
         password = $('#password').val(), 
-        password2 = $('#password2').val(), 
         nickname = $('#nickname').val(), 
-        email = $('#email').val(), 
-        email_sms = $('#email_sms').val();
-    // Validate password
-    var messageByID = {}, hasError = false;
-    if (password != password2) {
-        messageByID['password'] = 'Passwords must match';
-        messageByID['password2'] = 'Passwords must match';
-        hasError = true;
-    }
-    // Send feedback
-    if (hasError) {
+        email = $('#email').val();
+    $('.lockOnSave').attr('disabled', 'disabled');
+    $.post("${h.url('person_register' if c.isNew else 'person_update')}", {
+        username: username,
+        password: password,
+        nickname: nickname,
+        email: email
+    }, function(data) {
+        var messageByID = {};
+        if (data.isOk) {
+            messageByID['status'] = "Please check your email to ${'create' if c.isNew else 'finalize changes to'} your account.";
+        } else {
+            $('.lockOnSave').removeAttr('disabled');
+            messageByID = data.errorByID;
+        }
         showFeedback(messageByID);
-    } else {
-        // Lock
-        $('.lockOnSave').attr('disabled', 'disabled');
-        // Post
-        $.post("${h.url('person_register_' if c.isNew else 'person_update_')}", {
-            username: username,
-            password: password,
-            nickname: nickname,
-            email: email,
-            email_sms: email_sms
-        }, function(data) {
-            if (data.isOk) {
-                messageByID['status'] = "Please check your email to ${'create' if c.isNew else 'finalize changes to'} your account.";
-            } else {
-                $('.lockOnSave').removeAttr('disabled');
-                messageByID = data.errorByID;
-            }
-            showFeedback(messageByID);
-        }, 'json');
+    }, 'json');
+}
+$('#buttonSave').click(ajax_save);
+$('.updateSMSAddress').click(function() {
+    var button = $(this), action = button.val().toLowerCase(), smsAddressID = getNumber(this.id), smsAddressRow = $('#smsAddress' + smsAddressID), smsAddressEmail = $('#smsAddressEmail' + smsAddressID);
+    switch (action) {
+        case 'activate':
+            smsAddressEmail.removeClass('inactive');
+            button.val('Deactivate');
+            break;
+        case 'deactivate':
+            smsAddressEmail.addClass('inactive');
+            button.val('Activate');
+            break;
+        case 'remove':
+            smsAddressRow.hide();
+            break;
     }
+    $.post("${h.url('person_update')}", {smsAddressID: smsAddressID, action: action}, function(data) {
+        if (!data.isOk) {
+            switch (action) {
+                case 'activate':
+                    smsAddressEmail.addClass('inactive');
+                    button.val('Activate');
+                    break;
+                case 'deactivate':
+                    smsAddressEmail.removeClass('inactive');
+                    button.val('Deactivate');
+                    break;
+                case 'remove':
+                    smsAddressRow.show();
+                    break;
+            }
+            alert(data.message);
+        }
+    });
 });
+// Let ENTER key traverse and submit form
+$('#username').keydown(function(e) {if (e.keyCode == 13) $('#password').focus()});
+$('#password').keydown(function(e) {if (e.keyCode == 13) $('#nickname').focus()});
+$('#nickname').keydown(function(e) {if (e.keyCode == 13) $('#email').focus()});
+$('#email').keydown(function(e) {if (e.keyCode == 13) ajax_save()});
+// Focus
 $('#username').focus();
 </%def>
 
@@ -71,6 +103,9 @@ $('#username').focus();
 ${'Register for an account' if c.isNew else 'Update your account'}
 </%def>
 
+<%
+from pylons import config
+%>
 <table>
     <tr>
         <td class=label><label for=username>Username</label></td>
@@ -83,11 +118,6 @@ ${'Register for an account' if c.isNew else 'Update your account'}
         <td id=m_password>So you have some privacy</td>
     </tr>
     <tr>
-        <td class=label><label for=password2>Password again</label></td>
-        <td class=field><input id=password2 name=password2 class="lockOnSave maximumWidth" type=password autocomplete=off></td>
-        <td id=m_password2>To make sure you typed it right</td>
-    </tr>
-    <tr>
         <td class=label><label for=nickname>Nickname</label></td>
         <td class=field><input id=nickname name=nickname class="lockOnSave maximumWidth" autocomplete=off></td>
         <td id=m_nickname>How others see you</td>
@@ -98,12 +128,32 @@ ${'Register for an account' if c.isNew else 'Update your account'}
         <td id=m_email>To confirm changes to your account</td>
     </tr>
     <tr>
-        <td class=label><label for=email_sms>SMS address</label></td>
-        <td class=field><input id=email_sms name=email_sms class="lockOnSave maximumWidth" autocomplete=off></td>
-        <td id=m_email_sms>For text message alerts (optional)</td>
+        <td></td>
+        <td><input id=buttonSave class=lockOnSave type=button value="${'Register' if c.isNew else 'Update'}"></td>
+        <td id=m_status></td>
+    </tr>
+% if not c.isNew:
+    <tr>
+        <td>&nbsp;</td>
     </tr>
     <tr>
-        <td><input id=buttonSave class=lockOnSave type=button value="${'Register' if c.isNew else 'Update'}"></td>
+        <td colspan=3>Send ${h.getPersonID()} as a text message to ${config['sms.email']} for SMS alerts</td>
     </tr>
+% for smsAddress in sorted(c.smsAddresses, key=lambda x: -x.is_active):
+    <tr id=smsAddress${smsAddress.id}>
+        <td></td>
+        <td id=smsAddressEmail${smsAddress.id}\
+        % if not smsAddress.is_active:
+            class=inactive\
+        % endif
+        >${smsAddress.email}</td>
+        <td>
+            <input type=button id=removeSMSAddress${smsAddress.id} class=updateSMSAddress value=Remove>
+% if not smsAddress.is_active:
+            <input type=button id=activateSMSAddress${smsAddress.id} class=updateSMSAddress value=Activate>
+% endif
+        </td>
+    </tr>
+% endfor
+% endif
 </table>
-<span id=m_status></span>

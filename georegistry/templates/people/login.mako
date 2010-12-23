@@ -35,9 +35,9 @@ function ajax_login() {
         loginData['recaptcha_response_field'] = $('#recaptcha_response_field').val();
     }
     // Attempt login
-    $.post("${h.url('person_login_')}", loginData, function(data) {
+    $.post("${h.url('person_login')}", loginData, function(data) {
         if (data.isOk) {
-            window.location = "${c.targetURL}";
+            window.location = "${c.url}";
         } else {
             // Give feedback
             $('#reset').show();
@@ -68,9 +68,8 @@ function isEmpty(inputID) {
         return 0;
     }
 }
-$('#password').keydown(function(e) {
-    if (e.keyCode == 13) ajax_login();
-});
+$('#username').keydown(function(e) {if (e.keyCode == 13) $('#password').focus()});
+$('#password').keydown(function(e) {if (e.keyCode == 13) ajax_login()});
 
 // Prepare reset form
 $('#resetLink').click(function() {
@@ -94,7 +93,7 @@ function ajax_reset() {
         'email': email
     }, function(data) {
         if (data.isOk) {
-            $('#m_password').html('Please check your email');
+            $('#m_password').html('Please check your mailbox');
         } else {
             $('#m_password').html('Email not found');
             $('.lockOnReset').removeAttr('disabled');

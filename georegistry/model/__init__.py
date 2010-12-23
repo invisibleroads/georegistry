@@ -11,7 +11,7 @@ from georegistry.model.meta import Session, Base
 from georegistry.config import parameter
 
 
-# Define methods
+# Methods
 
 def init_model(engine):
     'Call me before using any of the tables or classes in the model'
@@ -22,7 +22,7 @@ def hashString(string):
     return hashlib.sha256(string).digest()
 
 
-# Define tables
+# Tables
 
 people_table = sa.Table('people', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
@@ -30,7 +30,6 @@ people_table = sa.Table('people', Base.metadata,
     sa.Column('password_hash', sa.LargeBinary(32), nullable=False),
     sa.Column('nickname', sa.Unicode(parameter.NICKNAME_LENGTH_MAXIMUM), unique=True, nullable=False),
     sa.Column('email', sa.String(parameter.EMAIL_LENGTH_MAXIMUM), unique=True, nullable=False),
-    sa.Column('email_sms', sa.String(parameter.EMAIL_LENGTH_MAXIMUM)),
     sa.Column('minutes_offset', sa.Integer, default=0),
     sa.Column('rejection_count', sa.Integer, default=0),
     sa.Column('is_super', sa.Boolean, default=False),
@@ -41,10 +40,15 @@ person_candidates_table = sa.Table('person_candidates', Base.metadata,
     sa.Column('password_hash', sa.LargeBinary(32), nullable=False),
     sa.Column('nickname', sa.Unicode(parameter.NICKNAME_LENGTH_MAXIMUM), nullable=False),
     sa.Column('email', sa.String(parameter.EMAIL_LENGTH_MAXIMUM), nullable=False),
-    sa.Column('email_sms', sa.String(parameter.EMAIL_LENGTH_MAXIMUM)),
+    sa.Column('person_id', sa.ForeignKey('people.id')),
     sa.Column('ticket', sa.String(parameter.TICKET_LENGTH), unique=True, nullable=False),
     sa.Column('when_expired', sa.DateTime, nullable=False),
-    sa.Column('person_id', sa.ForeignKey('people.id')),
+)
+sms_addresses_table = sa.Table('sms_addresses', Base.metadata,
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('email', sa.String(parameter.EMAIL_LENGTH_MAXIMUM), unique=True, nullable=False),
+    sa.Column('owner_id', sa.ForeignKey('people.id')),
+    sa.Column('is_active', sa.Boolean, default=False),
 )
 countries_table = sa.Table('countries', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
@@ -63,28 +67,37 @@ regions_table = sa.Table('regions', Base.metadata,
 )
 
 
-# Define classes
+# Classes
 
 class Person(object):
 
-    def __init__(self, username, password_hash, nickname, email, email_sms=''):
+    def __init__(self, username, password_hash, nickname, email):
         self.username = username
         self.password_hash = password_hash
         self.nickname = nickname
         self.email = email
-        self.email_sms = email_sms
 
     def __repr__(self):
-        return "<Person('%s')>" % self.username
+        return "<Person('%s')>" % self.email
 
 
 class PersonCandidate(Person):
 
     def __repr__(self):
-        return "<PersonCandidate('%s')>" % self.username
+        return "<PersonCandidate('%s')>" % self.email
 
 
-class CaseInsensitiveComparator(orm.properties.ColumnProperty.Comparator):
+class SMSAddress(object):
+
+    def __init__(self, email, owner_id):
+        self.email = email
+        self.owner_id = owner_id
+
+    def __repr__(self):
+        return "<SMSAddress('%s')>" % self.email
+
+
+class LowerCaseComparator(orm.properties.ColumnProperty.Comparator):
 
     def __eq__(self, other):
         return sa.func.lower(self.__clause_element__()) == sa.func.lower(other)
@@ -115,15 +128,22 @@ class Region(object):
         self.level = level
 
 
-# Map classes to tables
+# Links
 
 orm.mapper(Person, people_table, properties={
-    'username': orm.column_property(people_table.c.username, comparator_factory=CaseInsensitiveComparator),
-    'nickname': orm.column_property(people_table.c.nickname, comparator_factory=CaseInsensitiveComparator),
-    'email': orm.column_property(people_table.c.email, comparator_factory=CaseInsensitiveComparator),
-    'email_sms': orm.column_property(people_table.c.email_sms, comparator_factory=CaseInsensitiveComparator),
+    'username': orm.column_property(people_table.c.username, comparator_factory=LowerCaseComparator),
+    'nickname': orm.column_property(people_table.c.nickname, comparator_factory=LowerCaseComparator),
+    'email': orm.column_property(people_table.c.email, comparator_factory=LowerCaseComparator),
+    'sms_addresses': orm.relation(SMSAddress),
 })
-orm.mapper(PersonCandidate, person_candidates_table)
+orm.mapper(PersonCandidate, person_candidates_table, properties={
+    'username': orm.column_property(person_candidates_table.c.username, comparator_factory=LowerCaseComparator),
+    'nickname': orm.column_property(person_candidates_table.c.nickname, comparator_factory=LowerCaseComparator),
+    'email': orm.column_property(person_candidates_table.c.email, comparator_factory=LowerCaseComparator),
+})
+orm.mapper(SMSAddress, sms_addresses_table, properties={
+    'email': orm.column_property(sms_addresses_table.c.email, comparator_factory=LowerCaseComparator),
+})
 orm.mapper(Country, countries_table, properties={
     'regions': orm.relation(Region, backref='country'),
     'center': geoalchemy.GeometryColumn(countries_table.c.center, comparator=geoalchemy.postgis.PGComparator),

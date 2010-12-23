@@ -9,7 +9,6 @@ import optparse
 # Import custom modules
 from georegistry import model
 from georegistry.lib import store
-from georegistry.config import environment
 
 
 def buildOptionParser():
@@ -26,9 +25,7 @@ def initialize(options):
     # Load
     configuration = ConfigParser.ConfigParser({'here': basePath})
     configuration.read(options.configurationPath)
-    safe = environment.loadSafe(configuration.get('app:main', 'safe_path'))
-    sqlalchemyURL = environment.patchSQLAlchemyURL(configuration.get('app:main', 'sqlalchemy.url'), safe)
     # Connect
-    model.init_model(sa.create_engine(sqlalchemyURL))
+    model.init_model(sa.create_engine(configuration.get('app:main', 'sqlalchemy.url')))
     # Return
     return configuration
