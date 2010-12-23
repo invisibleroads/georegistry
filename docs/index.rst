@@ -5,7 +5,7 @@ The ``key`` argument is an API key that is assigned upon registration.  If not s
 
     POST   /features (features=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
     DELETE /features (featureIDs=integerList, key=string) --> isOk=boolean
-    GET    /tags.json (key=string) --> tags=stringList
+    GET    /tags.json (key=string) --> nestedTags=nestedDictionaries
     GET    /maps.json (tags=stringList, filters=geojson, key=string) --> geojson for OpenLayers
     GET    /maps/{Z}/{X}/{Y}.json (tags=stringList, filters=geojson, key=string) --> geojson for Polymaps
 

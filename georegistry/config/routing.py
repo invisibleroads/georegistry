@@ -25,13 +25,18 @@ def make_map(config):
     map.connect('person_update', '/people/update', controller='people', action='update_', conditions=POST)
     map.connect('person_logout', '/people/logout', controller='people', action='logout')
     map.connect('person_reset', '/people/reset', controller='people', action='reset')
-    # Map regions
-    map.connect('region_index_plain', '/regions', controller='regions', action='index')
-    map.connect('region_index', '/regions.:(responseFormat)', controller='regions', action='index')
-    map.connect('region_show', '/regions/:(countryCode).:(responseFormat)', controller='regions', action='show')
-    map.connect('region_show_plain', '/regions/:(countryCode)', controller='regions', action='show')
+    # Map features
+    map.connect('/features', controller='features', action='update', conditions=POST)
+    map.connect('/features', controller='features', action='delete', conditions=DELETE)
+    # Map tags
+    map.connect('/tags', controller='tags', action='index')
+    map.connect('/tags.{responseFormat}', controller='tags', action='index')
+    # Map maps
+    map.connect('/maps', controller='maps', action='view')
+    map.connect('/maps.{responseFormat}', controller='maps', action='view')
+    map.connect('/maps/{Z}/{X}/{Y}.{responseFormat}', controller='maps', action='view')
     # Redirect index
-    map.redirect('/', '/regions')
+    map.redirect('/', '/people')
     # Return
     return map
 
@@ -39,3 +44,4 @@ def make_map(config):
 # Set constants
 GET = dict(method=['GET'])
 POST = dict(method=['POST'])
+DELETE = dict(method=['DELETE'])
