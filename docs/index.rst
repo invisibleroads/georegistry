@@ -12,7 +12,7 @@ The ``key`` argument is an API key that is assigned upon registration.  If not s
 
 Add features
 ------------
-Given a geojson FeatureCollection and a list of tags, store and associate each individual feature with the given properties and tags.  Return featureIDs aligned with the original FeatureCollection.  On error, return traceback.
+Given a geojson FeatureCollection and a nested dictionary of tags, store and associate each individual feature with the given properties and tags.  Return featureIDs aligned with the original FeatureCollection.  On error, return traceback.
 
 - Create tags that do not exist.
 - Specify public tags with a trailing asterisk, i.e. ``hospitals*``.  Tags are private by default.  Features marked with a private tag are only visible to the API key that originally created the feature.

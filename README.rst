@@ -2,10 +2,8 @@ GeoRegistry
 ===========
 
 
-
 Installation on Fedora
 ----------------------
-
 
 
 Install geospatial libraries
@@ -27,8 +25,7 @@ Install PostgreSQL
         service postgresql start
         passwd postgres
         su - postgres
-            psql
-                alter role postgres with password 'SET-PASSWORD-HERE'
+            psql -c "alter role postgres with password 'SET-PASSWORD-HERE';"
             vim data/pg_hba.conf
                 # "local" is for Unix domain socket connections only
                 local   all         all                               md5
@@ -39,45 +36,55 @@ Install PostgreSQL
         service postgresql restart
 
 
+Prepare production configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+    paster make-config georegistry production.ini
+    vim production.ini
+
+
+Prepare database template
+^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+    su - postgres
+        createdb -E UTF8 template_postgis
+        createlang -d template_postgis plpgsql
+        PGSHARE=`pg_config --sharedir`
+        psql -d template_postgis -f `find $PGSHARE -name postgis.sql -o -name postgis-64.sql | tail -n 1`
+        psql -d template_postgis -f `find $PGSHARE -name spatial_ref_sys.sql | tail -n 1`
+        psql -d template_postgis -c 'GRANT ALL ON geometry_columns TO PUBLIC; GRANT ALL ON spatial_ref_sys TO PUBLIC;'
+
+
 Prepare database
 ^^^^^^^^^^^^^^^^
 ::
-    
-    su
-        su - postgres
-            createdb -E UTF8 SET-DATABASE-HERE
-            createlang -d SET-DATABASE-HERE plpgsql
-            # psql -d SET-DATABASE-HERE -f /usr/share/pgsql/contrib/postgis.sql
-            psql -d SET-DATABASE-HERE -f /usr/share/pgsql/contrib/postgis-64.sql
-            psql -d SET-DATABASE-HERE -f /usr/share/pgsql/contrib/spatial_ref_sys.sql
 
-            createuser SET-USERNAME-HERE
-            psql SET-DATABASE-HERE
-                alter role SET-USERNAME-HERE with password 'SET-PASSWORD-HERE';
-                grant all on database SET-DATABASE-HERE to "SET-USERNAME-HERE";
-                grant all on spatial_ref_sys to "SET-USERNAME-HERE";
-                grant all on geometry_columns to "SET-USERNAME-HERE";
+    createuser -U postgres SET-USERNAME-HERE
+    psql -U postgres -c "alter role SET-USERNAME-HERE with password 'SET-PASSWORD-HERE';"
+    createdb -U postgres -T template_postgis -O SET-USERNAME-HERE SET-DATABASE-HERE
+    paster setup-app production.ini
 
 
-Configure settings
-^^^^^^^^^^^^^^^^^^
+Launch server
+^^^^^^^^^^^^^
 ::
 
-    cp default.cfg .production.cfg
-    vim .production.cfg
+    paster serve --daemon production.ini
 
-
-Install tables
+    
+Reset database
 ^^^^^^^^^^^^^^
 ::
 
+    dropdb -U postgres SET-DATABASE-HERE
+    createdb -U postgres -T template_postgis -O SET-USERNAME-HERE SET-DATABASE-HERE
     paster setup-app production.ini
-
 
 
 Installation on WebFaction
 --------------------------
-
 
 
 Install geospatial libraries
@@ -110,9 +117,6 @@ Install geospatial libraries
 
     wget http://www.gadm.org/data/shp/GTM_adm.zip
     unzip GTM_adm.zip
-
-    cp default.cfg .production.cfg
-    vim .production.cfg
 
     export LD_LIBRARY_PATH=$HOME/lib
     cd $HOME/webapps/georegistry

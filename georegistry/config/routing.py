@@ -26,6 +26,7 @@ def make_map(config):
     map.connect('person_logout', '/people/logout', controller='people', action='logout')
     map.connect('person_reset', '/people/reset', controller='people', action='reset')
     # Map features
+    map.connect('/features', controller='features', action='index', conditions=GET)
     map.connect('/features', controller='features', action='update', conditions=POST)
     map.connect('/features', controller='features', action='delete', conditions=DELETE)
     # Map tags

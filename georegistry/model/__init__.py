@@ -4,11 +4,11 @@ import sqlalchemy as sa
 import sqlalchemy.orm as orm
 import hashlib
 import geoalchemy
-import geoalchemy.postgis
 import shapely.wkb
 # Import custom modules
 from georegistry.model.meta import Session, Base
 from georegistry.config import parameter
+from georegistry.lib import store
 
 
 # Methods
@@ -91,6 +91,7 @@ class Person(object):
         self.password_hash = password_hash
         self.nickname = nickname
         self.email = email
+        self.key = store.makeRandomString(parameter.KEY_LENGTH)
 
     def __repr__(self):
         return "<Person('%s')>" % self.email
@@ -173,17 +174,17 @@ orm.mapper(SMSAddress, sms_addresses_table, properties={
 })
 orm.mapper(Feature, features_table, properties={
     'owner': orm.relation(Person, backref='features'),
-    'geometry': geoalchemy.GeometryColumn(features_table.c.geometry, comparator=geoalchemy.postgis.PGComparator),
-    'tags': orm.relation(Feature, secondary=feature_tags_table, backref='features'),
+    'geometry': geoalchemy.GeometryColumn(features_table.c.geometry, comparator=geoalchemy.SpatialComparator),
+    'tags': orm.relation(Tag, secondary=feature_tags_table, backref='features'),
 })
 orm.mapper(Tag, tags_table, properties={
     'children': orm.relation(Tag, backref=orm.backref('parent', remote_side=[tags_table.c.id])),
-    'center': geoalchemy.GeometryColumn(tags_table.c.center, comparator=geoalchemy.postgis.PGComparator),
-    'bound_lb': geoalchemy.GeometryColumn(tags_table.c.bound_lb, comparator=geoalchemy.postgis.PGComparator),
-    'bound_rt': geoalchemy.GeometryColumn(tags_table.c.bound_rt, comparator=geoalchemy.postgis.PGComparator),
+    'center': geoalchemy.GeometryColumn(tags_table.c.center, comparator=geoalchemy.SpatialComparator),
+    'bound_lb': geoalchemy.GeometryColumn(tags_table.c.bound_lb, comparator=geoalchemy.SpatialComparator),
+    'bound_rt': geoalchemy.GeometryColumn(tags_table.c.bound_rt, comparator=geoalchemy.SpatialComparator),
 })
 orm.mapper(Map, maps_table, properties={
-    'tags': orm.relation(Feature, secondary=map_tags_table, backref='maps'),
+    'tags': orm.relation(Tag, secondary=map_tags_table, backref='maps'),
 })
 
 
