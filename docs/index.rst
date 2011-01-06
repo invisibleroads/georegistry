@@ -3,7 +3,7 @@ Welcome to georegistry's documentation!
 The ``key`` argument is an API key that is assigned upon registration.  If not specified, the user will still be able to retrieve public tags and maps.
 ::
 
-    POST   /features (features=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
+    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
     DELETE /features (featureIDs=integerList, key=string) --> isOk=boolean
     GET    /tags.json (key=string) --> nestedTags=nestedDictionaries
     GET    /maps.json (tags=stringList, filter=geojson, key=string) --> geojson for OpenLayers
@@ -20,7 +20,7 @@ Given a geojson FeatureCollection and a nested dictionary of tags, store and ass
 
 ::
 
-    POST   /features (features=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
+    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
 
 
 Edit features
@@ -31,7 +31,7 @@ Given a geojson FeatureCollection and a list of tags, overwrite features with ma
 
 ::
 
-    POST   /features (features=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
+    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
 
 
 Delete features

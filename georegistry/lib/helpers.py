@@ -17,7 +17,22 @@ def isPersonSuper():
     return 1 if session.get('is_super', False) else 0
 
 def getPersonID():
-    return session.get('personID', 0)
+   return session.get('personID', 0)
+
+def getPersonIDViaKey():
+    'Try to get personID via key; otherwise, try to get personID via session'
+    # Load key
+    key = request.params.get('key', '').strip()
+    # If we have a key,
+    if key:
+        # Load person
+        person = Session.query(model.Person).filter_by(key=key).first()
+        # If the person exists,
+        if person:
+            # Return personID via key
+            return person.id
+    # Return personID via session
+    return getPersonID()
 
 def getMinutesOffset():
     try:
