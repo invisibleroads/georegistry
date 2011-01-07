@@ -5,8 +5,8 @@
 #
 [DEFAULT]
 debug = false
-email_to = support@example.com
-error_email_from = support@example.com
+email_to = support@georegistry.org
+error_email_from = support@georegistry.org
 smtp_server = localhost
 # smtp_username = 
 # smtp_password = 

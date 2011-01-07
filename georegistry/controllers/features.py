@@ -1,3 +1,7 @@
+# Add properties
+# Add spatial reference proj4
+
+
 'Features controller'
 # Import pylons modules
 from pylons import request, response, session, tmpl_context as c, url
@@ -24,30 +28,28 @@ class FeaturesController(BaseController):
         personID = h.getPersonIDViaKey()
         if not personID:
             return dict(isOk=0, message='Please log in or provide a valid key')
-        # Load features
+        # Load featureDictionaries
         try:
-            features = geojson.loads(request.POST.get('featureCollection', '')).features
-        except geojson.JSONDecodeError:
-            return dict(isOk=0, message='Could not parse featureCollection as geojson')
-        except AttributeError:
+            featureDictionaries = geojson.loads(request.POST.get('featureCollection', ''))['features']
+        except simplejson.JSONDecodeError, error:
+            return dict(isOk=0, message='Could not parse featureCollection as geojson (%s)' % error)
+        except KeyError:
             return dict(isOk=0, message='Could not get features from featureCollection')
         if not features:
             return dict(isOk=0, message='featureCollection must have at least one feature')
         # Load nestedTags
         try:
-            nestedTags = request.POST.get('nestedTags', '')
-        except simplejson.JSONDecodeError:
-            return dict(isOk=0, message='Could not parse nestedTags as json')
+            nestedTags = simplejson.loads(request.POST.get('nestedTags', ''))
+        except simplejson.JSONDecodeError, error:
+            return dict(isOk=0, message='Could not parse nestedTags as json (%s)' % error)
         if not nestedTags:
             return dict(isOk=0, message='nestedTags must have at least one tag')
-        # Process tags
-        # For each feature,
-            # Add feature
-            # Set tags
+        # Process
+        tags = model.processNestedTags(nestedTags)
+        featureIDs = model.processFeatureDictionaries(featureDictionaries, tags)
         # Return
-    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
-        pass
+        return dict(isOk=1, featureIDs=featureIDs)
 
     def delete(self):
-    DELETE /features (featureIDs=integerList, key=string) --> isOk=boolean
+        # DELETE /features (featureIDs=integerList, key=string) --> isOk=boolean
         pass

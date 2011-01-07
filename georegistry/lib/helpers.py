@@ -7,7 +7,9 @@ from webhelpers.html import literal
 from webhelpers.html.tags import *
 # Import custom modules
 from georegistry.config.parameter import *
+from georegistry.model.meta import Session
 from georegistry.lib import whenIO
+from georegistry import model
 
 
 def isPerson():

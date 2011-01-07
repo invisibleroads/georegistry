@@ -64,9 +64,6 @@ tags_table = sa.Table('tags', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
     sa.Column('text', sa.Unicode(parameter.TAG_LENGTH_MAXIMUM), unique=True, nullable=False),
     sa.Column('parent_id', sa.ForeignKey('tags.id')),
-    geoalchemy.GeometryExtensionColumn('center', geoalchemy.Point(srid=900913)),
-    geoalchemy.GeometryExtensionColumn('bound_lb', geoalchemy.Point(srid=900913)),
-    geoalchemy.GeometryExtensionColumn('bound_rt', geoalchemy.Point(srid=900913)),
 )
 maps_table = sa.Table('maps', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
@@ -75,6 +72,9 @@ maps_table = sa.Table('maps', Base.metadata,
     sa.Column('z', sa.Integer),
     sa.Column('geojsonFilter', sa.UnicodeText),
     sa.Column('geojson', sa.UnicodeText),
+    geoalchemy.GeometryExtensionColumn('center', geoalchemy.Point(srid=900913)),
+    geoalchemy.GeometryExtensionColumn('bound_lb', geoalchemy.Point(srid=900913)),
+    geoalchemy.GeometryExtensionColumn('bound_rt', geoalchemy.Point(srid=900913)),
 )
 map_tags_table = sa.Table('map_tags', Base.metadata,
     sa.Column('map_id', sa.ForeignKey('maps.id')),
@@ -189,5 +189,35 @@ orm.mapper(Map, maps_table, properties={
 
 
 # DDLs
+
 geoalchemy.GeometryDDL(features_table)
-geoalchemy.GeometryDDL(tags_table)
+geoalchemy.GeometryDDL(maps_table)
+
+
+# Helpers
+
+def processNestedTags():
+    pass
+
+def processFeatureDictionaries():
+    pass
+        # For each featureDictionary,
+        for featureDictionary in featureDictionaries:
+            # Expand
+            featureID = featureDictionary.get('id')
+            geometry = featureDictionary.get('geometry')
+            properties = featureDictionary.get('properties')
+            # If featureID is specified,
+                # Load feature
+                # If it doesn't exist,
+        
+            # Add feature
+            feature = model.Feature(geometry, personID)
+{'geometry': None, 'id': None, 'properties': {}, 'type': 'Feature'}
+            # Set tags
+features_table = sa.Table('features', Base.metadata,
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('owner_id', sa.ForeignKey('people.id')),
+    geoalchemy.GeometryExtensionColumn('geometry', geoalchemy.Geometry(srid=900913), nullable=False),
+)
+geoalchemy.utils.to_wkt(featureDictionary['geometry'])

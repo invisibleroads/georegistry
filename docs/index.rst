@@ -3,7 +3,7 @@ Welcome to georegistry's documentation!
 The ``key`` argument is an API key that is assigned upon registration.  If not specified, the user will still be able to retrieve public tags and maps.
 ::
 
-    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
+    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, message=string
     DELETE /features (featureIDs=integerList, key=string) --> isOk=boolean
     GET    /tags.json (key=string) --> nestedTags=nestedDictionaries
     GET    /maps.json (tags=stringList, filter=geojson, key=string) --> geojson for OpenLayers
@@ -12,7 +12,7 @@ The ``key`` argument is an API key that is assigned upon registration.  If not s
 
 Add features
 ------------
-Given a geojson FeatureCollection and a nested dictionary of tags, store and associate each individual feature with the given properties and tags.  Return featureIDs aligned with the original FeatureCollection.  On error, return traceback.
+Given a geojson FeatureCollection and a nested dictionary of tags, store and associate each individual feature with the given properties and tags.  Return featureIDs aligned with the original FeatureCollection.  On error, return message.
 
 - Create tags that do not exist.
 - Specify public tags with a trailing asterisk, i.e. ``hospitals*``.  Tags are private by default.  Features marked with a private tag are only visible to the API key that originally created the feature.
@@ -20,7 +20,7 @@ Given a geojson FeatureCollection and a nested dictionary of tags, store and ass
 
 ::
 
-    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
+    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, message=string
 
 
 Edit features
@@ -31,7 +31,7 @@ Given a geojson FeatureCollection and a list of tags, overwrite features with ma
 
 ::
 
-    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, traceback=string
+    POST   /features (featureCollection=geojson, nestedTags=nestedDictionaries, key=string) --> isOk=boolean, featureIDs=integerList, message=string
 
 
 Delete features
