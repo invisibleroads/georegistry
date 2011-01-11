@@ -44,8 +44,9 @@ class FeaturesController(BaseController):
             return dict(isOk=0, message='Could not parse nestedTags as json (%s)' % error)
         if not nestedTags:
             return dict(isOk=0, message='nestedTags must have at least one tag')
-        # Process
+        # Process tags
         tags = model.processNestedTags(nestedTags)
+        # Process features
         featureIDs = model.processFeatureDictionaries(featureDictionaries, tags)
         # Return
         return dict(isOk=1, featureIDs=featureIDs)

@@ -63,7 +63,6 @@ feature_tags_table = sa.Table('feature_tags', Base.metadata,
 tags_table = sa.Table('tags', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
     sa.Column('text', sa.Unicode(parameter.TAG_LENGTH_MAXIMUM), unique=True, nullable=False),
-    sa.Column('parent_id', sa.ForeignKey('tags.id')),
 )
 maps_table = sa.Table('maps', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
@@ -128,9 +127,18 @@ class Feature(object):
 
 class Tag(object):
 
-    def __init__(self, text, parent_id):
+    def __init__(self, text):
         self.text = text
-        self.parent_id = parent_id
+
+
+class Map(object):
+    'GeoJSON cache'
+
+    def __init__(self, x, y, z, geojsonFilter):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.geojsonFilter = geojsonFilter
 
     def refresh(self):
         'Set center and bounding box'
@@ -144,16 +152,6 @@ class Tag(object):
         bound_lb = shapely.wkb.loads(str(self.bound_lb.geom_wkb))
         bound_rt = shapely.wkb.loads(str(self.bound_rt.geom_wkb))
         return bound_lb.x, bound_lb.y, bound_rt.x, bound_rt.y
-
-
-class Map(object):
-    'GeoJSON cache'
-
-    def __init__(self, x, y, z, geojsonFilter):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.geojsonFilter = geojsonFilter
 
 
 # Links
@@ -179,12 +177,12 @@ orm.mapper(Feature, features_table, properties={
 })
 orm.mapper(Tag, tags_table, properties={
     'children': orm.relation(Tag, backref=orm.backref('parent', remote_side=[tags_table.c.id])),
-    'center': geoalchemy.GeometryColumn(tags_table.c.center, comparator=geoalchemy.SpatialComparator),
-    'bound_lb': geoalchemy.GeometryColumn(tags_table.c.bound_lb, comparator=geoalchemy.SpatialComparator),
-    'bound_rt': geoalchemy.GeometryColumn(tags_table.c.bound_rt, comparator=geoalchemy.SpatialComparator),
 })
 orm.mapper(Map, maps_table, properties={
     'tags': orm.relation(Tag, secondary=map_tags_table, backref='maps'),
+    'center': geoalchemy.GeometryColumn(tags_table.c.center, comparator=geoalchemy.SpatialComparator),
+    'bound_lb': geoalchemy.GeometryColumn(tags_table.c.bound_lb, comparator=geoalchemy.SpatialComparator),
+    'bound_rt': geoalchemy.GeometryColumn(tags_table.c.bound_rt, comparator=geoalchemy.SpatialComparator),
 })
 
 
@@ -196,10 +194,19 @@ geoalchemy.GeometryDDL(maps_table)
 
 # Helpers
 
-def processNestedTags():
-    pass
+def processNestedTags(nestedTags):
+    'Save changes to tags'
+    # Add tags that don't exist
 
-def processFeatureDictionaries():
+    # Initialize queuedPacks
+
+    # Load tagByText
+    # While queuedPacks exist,
+        # Append tag with placeholder for parentID
+        # Queue children
+    # Return tags
+
+def processFeatureDictionaries(featureDictionaries, tags):
     pass
         # For each featureDictionary,
         for featureDictionary in featureDictionaries:
