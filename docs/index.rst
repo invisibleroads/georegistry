@@ -4,7 +4,7 @@ GeoRegistry API
 ::
 
     POST   /features (key=string, proj4=string, featureCollection=geojson, tags=strings, isPublic=binary) --> isOk=binary, featureIDs=integers
-    DELETE /features (key=string, featureIDs=integers) --> isOk=binary
+    POST   /features/delete (key=string, featureIDs=integers) --> isOk=binary
     GET    /tags.json (key=string) --> tags=strings
     GET    /maps.json (key=string, proj4=string, tags=strings) --> featureCollection=geojson
     GET    /maps/{Z}/{X}/{Y}.json (key=string, proj4=string, tags=strings) --> featureCollection=geojson
@@ -23,7 +23,7 @@ Delete features
 Given a integer list of featureIDs, delete corresponding features; delete access is restricted to the API key that originally created the feature.
 ::
 
-    DELETE /features (key=string, featureIDs=integers) --> isOk=binary
+    POST   /features/delete (key=string, featureIDs=integers) --> isOk=binary
 
 
 Get tags

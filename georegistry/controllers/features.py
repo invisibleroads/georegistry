@@ -54,6 +54,11 @@ class FeaturesController(BaseController):
             tags = model.processTags(tagTexts)
         except ValueError, error:
             return dict(isOk=0, message=str(error))
+        # Make sure that the user has write access to the given featureIDs
+        try:
+            featureByID = dict((x.id, x) for x in model.getFeatures([x.get('id') for x in featureDictionaries], personID))
+        except model.GeoRegistryError, error:
+            return dict(isOk=0, message=str(error))
         # Prepare
         features = []
         # For each featureDictionary,
@@ -67,26 +72,13 @@ class FeaturesController(BaseController):
                 featureGeometryWKT = geoalchemy.utils.to_wkt(featureGeometry)
             except (KeyError, TypeError), error:
                 return dict(isOk=0, message='Could not parse geometry=%s' % featureGeometry)
-            # If featureID is specified,
+            # If featureID is specified, load it
             if featureID is not None:
-                try:
-                    featureID = int(featureID)
-                except ValueError:
-                    return dict(isOk=0, message='Could not parse featureID=%s as integer' % featureID)
-                # Load feature
-                feature = Session.query(model.Feature).get(featureID)
-                # If it doesn't exist,
-                if not feature:
-                    return dict(isOk=0, message='Could not modify featureID=%s because it does not exist' % featureID)
-                # If the user is not the owner,
-                elif feature.owner_id != personID:
-                    return dict(isOk=0, message='Could not modify featureID=%s because you are not the owner' % featureID)
-            # If featureID is not specified,
+                feature = featureByID[featureID]
+            # If featureID is not specified, add it
             else:
-                # Make feature
                 feature = model.Feature()
                 feature.owner_id = personID
-                # Add feature
                 Session.add(feature)
             # Set
             feature.properties = featureProperties
@@ -102,5 +94,26 @@ class FeaturesController(BaseController):
         # Return
         return dict(isOk=1, featureIDs=featureIDs)
 
+    @jsonify
     def delete(self):
-        pass
+        'Delete features'
+        # Authenticate via personID or key
+        personID = h.getPersonIDViaKey()
+        if not personID:
+            return dict(isOk=0, message='Please log in or provide a valid key')
+        # Load featureIDs
+        try:
+            featureIDs = simplejson.loads(request.POST['featureIDs'])
+        except KeyError:
+            return dict(isOk=0, message='Please specify the featureIDs to delete')
+        # Make sure that the user has write access to the given featureIDs
+        try:
+            features = model.getFeatures(featureIDs, personID)
+        except model.GeoRegistryError, error:
+            return dict(isOk=0, message=str(error))
+        # Delete
+        Session.execute(model.feature_tags_table.delete(model.feature_tags_table.c.feature_id.in_(featureIDs)))
+        Session.execute(model.features_table.delete(model.features_table.c.id.in_(featureIDs)))
+        Session.commit()
+        # Return
+        return dict(isOk=1)

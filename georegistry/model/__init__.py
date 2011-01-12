@@ -239,3 +239,32 @@ def processTags(tagTexts):
     Session.commit()
     # Return
     return tags
+
+def getFeatures(featureIDs, personID):
+    'Raise GeoRegistryError if personID does not have write access to the featureIDs'
+    # Validate featureIDs
+    try:
+        featureIDs = [int(x) for x in featureIDs if x is not None]
+    except ValueError:
+        raise GeoRegistryError('Could not parse featureIDs=%s as integers' % featureIDs)
+    # If we have no featureIDs,
+    if not featureIDs:
+        return []
+    # Load
+    features = Session.query(Feature).filter(Feature.id.in_(featureIDs)).all()
+    # Validate missingIDs
+    missingIDs = set(featureIDs).difference(x.id for x in features)
+    if missingIDs:
+        raise GeoRegistryError('Cannot modify featureIDs=%s because they do not exist' % missingIDs)
+    # Validate blockedIDs
+    blockedIDs = [x.id for x in features if x.owner_id != personID]
+    if blockedIDs:
+        raise GeoRegistryError('Cannot modify featureIDs=%s because you are not the owner' % blockedIDs)
+    # Return
+    return features
+
+
+# Errors
+
+class GeoRegistryError(Exception):
+    pass

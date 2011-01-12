@@ -27,7 +27,7 @@ def make_map(config):
     map.connect('person_reset', '/people/reset', controller='people', action='reset')
     # Map features
     map.connect('feature_update', '/features', controller='features', action='update', conditions=POST)
-    map.connect('feature_delete', '/features', controller='features', action='delete', conditions=DELETE)
+    map.connect('feature_delete', '/features/delete', controller='features', action='delete', conditions=POST)
     # Map tags
     map.connect('tag_index', '/tags', controller='tags', action='index')
     map.connect('tag_index_', '/tags.{responseFormat}', controller='tags', action='index')
@@ -45,4 +45,3 @@ def make_map(config):
 # Set constants
 GET = dict(method=['GET'])
 POST = dict(method=['POST'])
-DELETE = dict(method=['DELETE'])

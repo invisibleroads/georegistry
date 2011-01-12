@@ -10,7 +10,7 @@ from georegistry.model import Session
 from georegistry.tests import *
 
 
-# Prepare database
+# Prepare people
 people = []
 personPacks = [
     ('test_person1', model.hashString('test_person1'), u'test_person1', 'test_person1@example.com'),
@@ -23,6 +23,26 @@ for personPack in personPacks:
         Session.add(person)
         Session.commit()
     people.append(person)
+# Prepare features
+features = []
+featurePacks = [
+    (people[0].id, geoalchemy.WKTSpatialElement('POINT (0 1)')),
+    (people[1].id, geoalchemy.WKTSpatialElement('POINT (1 0)')),
+]
+for featurePack in featurePacks:
+    feature = Session.query(model.Feature).filter_by(owner_id=featurePack[0]).first()
+    if not feature:
+        feature = model.Feature()
+        feature.owner_id = featurePack[0]
+        feature.geometry = featurePack[1]
+        Session.add(feature)
+        Session.commit()
+    features.append(feature)
+# Set constants
+person1Key = people[0].key
+person2Key = people[1].key
+feature1ID = features[0].id
+feature2ID = features[1].id
 
 
 class TestFeaturesController(TestController):
@@ -41,17 +61,6 @@ class TestFeaturesController(TestController):
 
     def test_update(self):
         'Make sure we can update features properly'
-        # Initialize
-        person1Key = people[0].key
-        person2ID = people[1].id
-        feature2 = Session.query(model.Feature).filter_by(owner_id=person2ID).first()
-        if not feature2:
-            feature2 = model.Feature()
-            feature2.owner_id = person2ID
-            feature2.geometry = geoalchemy.WKTSpatialElement('POINT (1 1)')
-            Session.add(feature2)
-            Session.commit()
-        feature2ID = feature2.id
         # Expect error if we try to login without authentication
         self.assertEqualJSON(self.app.post(url('feature_update')), 0)
         self.assertEqualJSON(self.app.post(url('feature_update'), dict(key='')), 0)
@@ -64,12 +73,27 @@ class TestFeaturesController(TestController):
         self.assertEqualJSON(self.app.post(url('feature_update'), dict(key=person1Key, proj4=geometry_store.proj4LL, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(geometry=geojson.Point((0, 0)))])), tags='')), 0)
         self.assertEqualJSON(self.app.post(url('feature_update'), dict(key=person1Key, proj4=geometry_store.proj4LL, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(geometry=geojson.Point((0, 0)))])), tags=simplejson.dumps([]))), 0)
         self.assertEqualJSON(self.app.post(url('feature_update'), dict(key=person1Key, proj4=geometry_store.proj4LL, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(geometry=geojson.Point((0, 0)))])), tags=simplejson.dumps(['']))), 0)
-        # Expect error if we try to update a feature that does not exist
+        # Expect error if we try to update features that do not exist
         self.assertEqualJSON(self.app.post(url('feature_update'), dict(key=person1Key, proj4=geometry_store.proj4LL, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(id=0, geometry=geojson.Point((0, 0)))])), tags=simplejson.dumps(['tag1']))), 0)
-        # Expect error if we try to update a feature that we do not own
+        # Expect error if we try to update features that we do not own
         self.assertEqualJSON(self.app.post(url('feature_update'), dict(key=person1Key, proj4=geometry_store.proj4LL, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(id=feature2ID, geometry=geojson.Point((0, 0)))])), tags=simplejson.dumps(['tag1']))), 0)
         # Expect error if we submit invalid geometry
         self.assertEqualJSON(self.app.post(url('feature_update'), dict(key=person1Key, proj4=geometry_store.proj4LL, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(id=feature2ID, geometry=None)])), tags=simplejson.dumps(['tag1']))), 0)
         # Check that an example request works properly
         responseData = self.assertEqualJSON(self.app.post(url('feature_update'), dict(key=person1Key, proj4=geometry_store.proj4LL, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(geometry=geojson.Point((0, 0)))])), tags=simplejson.dumps(['tag1']))), 1)
+        ### Make sure the features are added
         responseData = self.assertEqualJSON(self.app.post(url('feature_update'), dict(key=person1Key, proj4=geometry_store.proj4LL, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(id=responseData['featureIDs'][0], geometry=geojson.Point((0, 0)))])), tags=simplejson.dumps(['tag1']))), 1)
+        ### Make sure the features are updated
+
+    def test_delete(self):
+        'Make sure we can delete features properly'
+        # Expect error if we try to login without authentication
+        self.assertEqualJSON(self.app.post(url('feature_delete')), 0)
+        self.assertEqualJSON(self.app.post(url('feature_delete'), dict(key='')), 0)
+        # Expect error if we try to delete features that do not exist
+        self.assertEqualJSON(self.app.post(url('feature_delete'), dict(key=person1Key, featureIDs=[0])), 0)
+        # Expect error if we try to delete features that we do not own
+        self.assertEqualJSON(self.app.post(url('feature_delete'), dict(key=person1Key, featureIDs=[feature2ID])), 0)
+        # Check that an example request works properly
+        responseData = self.assertEqualJSON(self.app.post(url('feature_delete'), dict(key=person1Key, featureIDs=[feature1ID])), 1)
+        ### Make sure the features are deleted
