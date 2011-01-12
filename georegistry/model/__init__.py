@@ -230,6 +230,9 @@ def processTags(tagTexts):
     tags = Session.query(Tag).filter(Tag.text.in_(tagTexts)).all()
     # Add tags that don't exist
     for tagText in set(tagTexts).difference(tag.text for tag in tags):
+        tagText = tagText.strip()
+        if not tagText:
+            raise ValueError('Cannot add a tag without text')
         tag = Tag(tagText)
         tags.append(tag)
         Session.add(tag)

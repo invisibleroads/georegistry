@@ -26,15 +26,16 @@ def make_map(config):
     map.connect('person_logout', '/people/logout', controller='people', action='logout')
     map.connect('person_reset', '/people/reset', controller='people', action='reset')
     # Map features
-    map.connect('/features', controller='features', action='update', conditions=POST)
-    map.connect('/features', controller='features', action='delete', conditions=DELETE)
+    map.connect('feature_update', '/features', controller='features', action='update', conditions=POST)
+    map.connect('feature_delete', '/features', controller='features', action='delete', conditions=DELETE)
     # Map tags
-    map.connect('/tags', controller='tags', action='index')
-    map.connect('/tags.{responseFormat}', controller='tags', action='index')
+    map.connect('tag_index', '/tags', controller='tags', action='index')
+    map.connect('tag_index_', '/tags.{responseFormat}', controller='tags', action='index')
     # Map maps
-    map.connect('/maps', controller='maps', action='view')
-    map.connect('/maps.{responseFormat}', controller='maps', action='view')
-    map.connect('/maps/{Z}/{X}/{Y}.{responseFormat}', controller='maps', action='view')
+    map.connect('map_view', '/maps', controller='maps', action='view')
+    map.connect('map_view_', '/maps.{responseFormat}', controller='maps', action='view')
+    map.connect('map_view_plus', '/maps/{Z}/{X}/{Y}', controller='maps', action='view')
+    map.connect('map_view_plus_', '/maps/{Z}/{X}/{Y}.{responseFormat}', controller='maps', action='view')
     # Redirect index
     map.redirect('/', '/maps')
     # Return

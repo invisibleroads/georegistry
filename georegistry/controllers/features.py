@@ -50,15 +50,29 @@ class FeaturesController(BaseController):
         # Load isPublic
         isPublic = request.POST.get('isPublic', 0)
         # Process tags
-        tags = model.processTags(tagTexts)
+        try:
+            tags = model.processTags(tagTexts)
+        except ValueError, error:
+            return dict(isOk=0, message=str(error))
+        # Prepare
+        features = []
         # For each featureDictionary,
         for featureDictionary in featureDictionaries:
             # Expand
             featureID = featureDictionary.get('id')
             featureGeometry = featureDictionary.get('geometry')
-            featureProperties = featureDictionary.get('properties')
+            featureProperties = featureDictionary.get('properties', {})
+            # Validate
+            try:
+                featureGeometryWKT = geoalchemy.utils.to_wkt(featureGeometry)
+            except (KeyError, TypeError), error:
+                return dict(isOk=0, message='Could not parse geometry=%s' % featureGeometry)
             # If featureID is specified,
-            if featureID:
+            if featureID is not None:
+                try:
+                    featureID = int(featureID)
+                except ValueError:
+                    return dict(isOk=0, message='Could not parse featureID=%s as integer' % featureID)
                 # Load feature
                 feature = Session.query(model.Feature).get(featureID)
                 # If it doesn't exist,
@@ -77,12 +91,16 @@ class FeaturesController(BaseController):
             # Set
             feature.properties = featureProperties
             feature.scope = model.scopePublic if isPublic else model.scopePrivate
-            feature.geometry = geoalchemy.WKTSpatialElement(geoalchemy.utils.to_wkt(featureGeometry), srid)
+            feature.geometry = geoalchemy.WKTSpatialElement(featureGeometryWKT, srid)
             feature.tags = tags
+            # Append
+            features.append(feature)
         # Commit
         Session.commit()
+        # Load featureIDs inefficiently
+        featureIDs = [x.id for x in features]
         # Return
-        return dict(isOk=1)
+        return dict(isOk=1, featureIDs=featureIDs)
 
     def delete(self):
         pass
