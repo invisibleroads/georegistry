@@ -1,7 +1,5 @@
 ## -*- coding: utf-8 -*-
-% if 'MSIE' in request.user_agent:
 <!doctype html>
-% endif
 <html>
 <head>
 <meta name="author" content="Roy Hyunjin Han" />

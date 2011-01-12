@@ -5,10 +5,16 @@ import sqlalchemy.orm as orm
 import hashlib
 import geoalchemy
 import shapely.wkb
+import osgeo.osr
 # Import custom modules
 from georegistry.model.meta import Session, Base
 from georegistry.config import parameter
 from georegistry.lib import store
+
+
+# Constants
+
+scopePrivate, scopePublic = xrange(2)
 
 
 # Methods
@@ -54,6 +60,8 @@ sms_addresses_table = sa.Table('sms_addresses', Base.metadata,
 features_table = sa.Table('features', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
     sa.Column('owner_id', sa.ForeignKey('people.id')),
+    sa.Column('properties', sa.PickleType(mutable=False)),
+    sa.Column('scope', sa.Integer, default=scopePrivate),
     geoalchemy.GeometryExtensionColumn('geometry', geoalchemy.Geometry(srid=900913), nullable=False),
 )
 feature_tags_table = sa.Table('feature_tags', Base.metadata,
@@ -69,7 +77,6 @@ maps_table = sa.Table('maps', Base.metadata,
     sa.Column('x', sa.Integer),
     sa.Column('y', sa.Integer),
     sa.Column('z', sa.Integer),
-    sa.Column('geojsonFilter', sa.UnicodeText),
     sa.Column('geojson', sa.UnicodeText),
     geoalchemy.GeometryExtensionColumn('center', geoalchemy.Point(srid=900913)),
     geoalchemy.GeometryExtensionColumn('bound_lb', geoalchemy.Point(srid=900913)),
@@ -120,9 +127,8 @@ class LowerCaseComparator(orm.properties.ColumnProperty.Comparator):
 
 class Feature(object):
 
-    def __init__(self, geometry, owner_id):
-        self.geometry = geometry
-        self.owner_id = owner_id
+    def __repr__(self):
+        return "<Feature(id=%s)>" % self.id
 
 
 class Tag(object):
@@ -130,15 +136,17 @@ class Tag(object):
     def __init__(self, text):
         self.text = text
 
+    def __repr__(self):
+        return "<Tag(id=%s)>" % self.id
+
 
 class Map(object):
     'GeoJSON cache'
 
-    def __init__(self, x, y, z, geojsonFilter):
+    def __init__(self, x, y, z):
         self.x = x
         self.y = y
         self.z = z
-        self.geojsonFilter = geojsonFilter
 
     def refresh(self):
         'Set center and bounding box'
@@ -152,6 +160,9 @@ class Map(object):
         bound_lb = shapely.wkb.loads(str(self.bound_lb.geom_wkb))
         bound_rt = shapely.wkb.loads(str(self.bound_rt.geom_wkb))
         return bound_lb.x, bound_lb.y, bound_rt.x, bound_rt.y
+
+    def __repr__(self):
+        return "<Map(id=%s)>" % self.id
 
 
 # Links
@@ -175,14 +186,12 @@ orm.mapper(Feature, features_table, properties={
     'geometry': geoalchemy.GeometryColumn(features_table.c.geometry, comparator=geoalchemy.SpatialComparator),
     'tags': orm.relation(Tag, secondary=feature_tags_table, backref='features'),
 })
-orm.mapper(Tag, tags_table, properties={
-    'children': orm.relation(Tag, backref=orm.backref('parent', remote_side=[tags_table.c.id])),
-})
+orm.mapper(Tag, tags_table)
 orm.mapper(Map, maps_table, properties={
     'tags': orm.relation(Tag, secondary=map_tags_table, backref='maps'),
-    'center': geoalchemy.GeometryColumn(tags_table.c.center, comparator=geoalchemy.SpatialComparator),
-    'bound_lb': geoalchemy.GeometryColumn(tags_table.c.bound_lb, comparator=geoalchemy.SpatialComparator),
-    'bound_rt': geoalchemy.GeometryColumn(tags_table.c.bound_rt, comparator=geoalchemy.SpatialComparator),
+    'center': geoalchemy.GeometryColumn(maps_table.c.center, comparator=geoalchemy.SpatialComparator),
+    'bound_lb': geoalchemy.GeometryColumn(maps_table.c.bound_lb, comparator=geoalchemy.SpatialComparator),
+    'bound_rt': geoalchemy.GeometryColumn(maps_table.c.bound_rt, comparator=geoalchemy.SpatialComparator),
 })
 
 
@@ -194,37 +203,36 @@ geoalchemy.GeometryDDL(maps_table)
 
 # Helpers
 
-def processNestedTags(nestedTags):
+def simplifyProj(proj4):
+    'Simplify proj4 string'
+    spatialReference = osgeo.osr.SpatialReference()
+    if spatialReference.ImportFromProj4(str(proj4)) != 0:
+        return
+    return spatialReference.ExportToProj4()
+
+def loadSRIDByProj4():
+    'Generate a dictionary mapping proj4 to srid'
+    # Initialize
+    sridByProj4 = {}
+    # For each spatial reference,
+    for proj4, srid in Session.execute('SELECT proj4text, srid FROM spatial_ref_sys'):
+        # Skip empty proj4s
+        if not proj4.strip():
+            continue
+        # Store
+        sridByProj4[simplifyProj(proj4)] = srid
+    # Return
+    return sridByProj4
+
+def processTags(tagTexts):
     'Save changes to tags'
+    # Load existing tags
+    tags = Session.query(Tag).filter(Tag.text.in_(tagTexts)).all()
     # Add tags that don't exist
-
-    # Initialize queuedPacks
-
-    # Load tagByText
-    # While queuedPacks exist,
-        # Append tag with placeholder for parentID
-        # Queue children
-    # Return tags
-
-def processFeatureDictionaries(featureDictionaries, tags):
-    pass
-        # For each featureDictionary,
-        for featureDictionary in featureDictionaries:
-            # Expand
-            featureID = featureDictionary.get('id')
-            geometry = featureDictionary.get('geometry')
-            properties = featureDictionary.get('properties')
-            # If featureID is specified,
-                # Load feature
-                # If it doesn't exist,
-        
-            # Add feature
-            feature = model.Feature(geometry, personID)
-{'geometry': None, 'id': None, 'properties': {}, 'type': 'Feature'}
-            # Set tags
-features_table = sa.Table('features', Base.metadata,
-    sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('owner_id', sa.ForeignKey('people.id')),
-    geoalchemy.GeometryExtensionColumn('geometry', geoalchemy.Geometry(srid=900913), nullable=False),
-)
-geoalchemy.utils.to_wkt(featureDictionary['geometry'])
+    for tagText in set(tagTexts).difference(tag.text for tag in tags):
+        tag = Tag(tagText)
+        tags.append(tag)
+        Session.add(tag)
+    Session.commit()
+    # Return
+    return tags

@@ -63,29 +63,6 @@ def run(shapePath):
     return '%s: %s regions' % (shapeName, regionCount)
 
 
-def simplifyProj(proj4):
-    'Simplify proj4 string'
-    spatialReference = osgeo.osr.SpatialReference()
-    spatialReference.ImportFromProj4(str(proj4))
-    # Return
-    return spatialReference.ExportToProj4()
-
-
-def loadSRIDByProj4():
-    'Generate a dictionary mapping proj4 to srid'
-    # Initialize
-    sridByProj4 = {}
-    # For each spatial reference,
-    for proj4, srid in Session.execute('SELECT proj4text, srid FROM spatial_ref_sys'):
-        # Skip empty proj4s
-        if not proj4.strip():
-            continue
-        # Store
-        sridByProj4[simplifyProj(proj4)] = srid
-    # Return
-    return sridByProj4
-
-
 def loadCountryPackByAlpha3():
     'Generate a dictionary mapping alpha3 to countryPack'
     # Initialize

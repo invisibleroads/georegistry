@@ -1,16 +1,14 @@
-import logging
-
+'Tags controller'
+# Import pylons modules
 from pylons import request, response, session, tmpl_context as c, url
 from pylons.controllers.util import abort, redirect
-
+# Import system modules
+import logging; log = logging.getLogger(__name__)
+# Import custom modules
 from georegistry.lib.base import BaseController, render
 
-log = logging.getLogger(__name__)
 
 class TagsController(BaseController):
 
     def index(self):
-        # Return a rendered template
-        #return render('/tags.mako')
-        # or, return a string
-        return 'Hello World'
+        return
