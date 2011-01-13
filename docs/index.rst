@@ -4,7 +4,7 @@ GeoRegistry API
 ::
 
     POST   /features (key=string, proj4=string, featureCollection=geojson, tags=strings, isPublic=binary) --> isOk=binary, featureIDs=integers
-    POST   /features/delete (key=string, featureIDs=integers) --> isOk=binary
+    DELETE /features (key=string, featureIDs=integers) --> isOk=binary
     GET    /tags.json (key=string) --> tags=strings
     GET    /maps.json (key=string, proj4=string, tags=strings) --> featureCollection=geojson
     GET    /maps/{Z}/{X}/{Y}.json (key=string, proj4=string, tags=strings) --> featureCollection=geojson

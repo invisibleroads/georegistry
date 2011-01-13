@@ -24,7 +24,7 @@ class FeaturesController(BaseController):
         if not personID:
             return dict(isOk=0, message='Please log in or provide a valid key')
         # Load srid
-        proj4 = model.simplifyProj(request.POST.get('proj4', ''))
+        proj4 = model.simplifyProj(request.params.get('proj4', ''))
         if not proj4:
             return dict(isOk=0, message='Must specify valid proj4 spatial reference')
         try:
@@ -33,22 +33,22 @@ class FeaturesController(BaseController):
             return dict(isOk=0, message='Could not recognize proj4 spatial reference')
         # Load featureDictionaries
         try:
-            featureDictionaries = geojson.loads(request.POST.get('featureCollection', ''))['features']
+            featureDictionaries = geojson.loads(request.params.get('featureCollection', ''))['features']
         except simplejson.JSONDecodeError, error:
             return dict(isOk=0, message='Could not parse featureCollection as geojson (%s)' % error)
         except KeyError:
             return dict(isOk=0, message='Could not get features from featureCollection')
         if not featureDictionaries:
-            return dict(isOk=0, message='Must have at least one feature')
+            return dict(isOk=0, message='Must specify at least one feature in featureCollection')
         # Load tagTexts
         try:
-            tagTexts = simplejson.loads(request.POST.get('tags', ''))
+            tagTexts = simplejson.loads(request.params.get('tags', ''))
         except simplejson.JSONDecodeError, error:
             return dict(isOk=0, message='Could not parse tags as json (%s)' % error)
         if not tagTexts:
-            return dict(isOk=0, message='Must have at least one tag')
+            return dict(isOk=0, message='Must specify at least one tag in tags')
         # Load isPublic
-        isPublic = request.POST.get('isPublic', 0)
+        isPublic = request.params.get('isPublic', 0)
         # Process tags
         try:
             tags = model.processTags(tagTexts)
@@ -103,9 +103,11 @@ class FeaturesController(BaseController):
             return dict(isOk=0, message='Please log in or provide a valid key')
         # Load featureIDs
         try:
-            featureIDs = simplejson.loads(request.POST['featureIDs'])
+            featureIDs = simplejson.loads(request.params.get('featureIDs', []))
         except KeyError:
             return dict(isOk=0, message='Please specify the featureIDs to delete')
+        if not featureIDs:
+            return dict(isOk=0, message='Must specify at least one featureID in featureIDs')
         # Make sure that the user has write access to the given featureIDs
         try:
             features = model.getFeatures(featureIDs, personID)
