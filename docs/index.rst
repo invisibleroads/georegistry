@@ -23,7 +23,7 @@ Delete features
 Given a integer list of featureIDs, delete corresponding features; delete access is restricted to the API key that originally created the feature.
 ::
 
-    POST   /features/delete (key=string, featureIDs=integers) --> isOk=binary
+    DELETE /features (key=string, featureIDs=integers) --> isOk=binary
 
 
 Get tags

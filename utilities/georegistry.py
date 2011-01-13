@@ -4,31 +4,72 @@ import urllib2
 import simplejson
 
 
+# Constants
+
+baseURL = 'http://georegistry.org'
+
+
 # Core
 
-def update(key, proj4, featureCollection, tags, isPublic):
+def updateFeatures(key, proj4, featureCollection, tags, isPublic):
     'Update features using the GeoRegistry web service'
-    return call('http://georegistry.org/features', {
+    # Initialize
+    url = baseURL + '/features'
+    # Call
+    responseData = call(url, {
         'key': key,
         'proj4': proj4,
         'featureCollection': featureCollection,
-        'tags': tags,
+        'tags': simplejson.dumps(tags),
         'isPublic': isPublic,
     }, 'POST')
+    # Return
+    return responseData['featureIDs']
 
-def delete(key, featureIDs):
+def deleteFeatures(key, featureIDs):
     'Delete features using the GeoRegistry web service'
-    return call('http://georegistry.org/features', {
+    # Initialize
+    url = baseURL + '/features'
+    # Call
+    call(url, {
         'key': key,
-        'featureIDs': featureIDs,
+        'featureIDs': simplejson.dumps(featureIDs),
     }, 'DELETE')
+
+def getTags(key):
+    'Get visible tags using the GeoRegistry web service'
+    # Initialize
+    url = baseURL + '/tags'
+    # Call
+    responseData = call(url + '.json', {
+        'key': key,
+    }, 'GET')
+    # Return
+    return responseData['tags']
+
+def viewMap(key, proj4, tags, xyz=None):
+    'Assemble a map using the GeoRegistry web service'
+    # Initialize
+    url = baseURL + '/maps'
+    # Expand
+    if xyz:
+        x, y, z = xyz
+        url += '/%s/%s/%s' % (z, x, y)
+    # Call
+    responseData = call(url + '.json', {
+        'key': key,
+        'proj4': proj4,
+        'tags': simplejson.dumps(tags),
+    }, 'GET')
+    # Return
+    return responseData['geojson']
 
 
 # Helpers
 
 def call(url, data, method):
     'Call a method in the GeoRegistry web service'
-    request = Request(method, url, simplejson.dumps(data)).read()
+    request = Request(method, url, data).read()
     responseData = simplejson.loads(urllib2.urlopen(request))
     isOk = int(responseData.get('isOk'))
     if not isOk:

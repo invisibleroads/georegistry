@@ -5,6 +5,7 @@ from pylons.controllers.util import abort, redirect
 from pylons.decorators import jsonify
 # Import system modules
 import simplejson
+import datetime
 import geojson
 import geoalchemy
 # Import custom modules
@@ -51,7 +52,7 @@ class FeaturesController(BaseController):
         isPublic = request.params.get('isPublic', 0)
         # Process tags
         try:
-            tags = model.processTags(tagTexts)
+            tags = model.processTagTexts(tagTexts)
         except ValueError, error:
             return dict(isOk=0, message=str(error))
         # Make sure that the user has write access to the given featureIDs
@@ -87,6 +88,9 @@ class FeaturesController(BaseController):
             feature.tags = tags
             # Append
             features.append(feature)
+        # Update timestamps for each tag
+        for tag in tags:
+            tag.when_updated = datetime.datetime.utcnow()
         # Commit
         Session.commit()
         # Load featureIDs inefficiently
@@ -113,6 +117,9 @@ class FeaturesController(BaseController):
             features = model.getFeatures(featureIDs, personID)
         except model.GeoRegistryError, error:
             return dict(isOk=0, message=str(error))
+        # Update timestamps for each tag
+        for tag in Session.query(model.Tag).join(model.Tag.features).filter(model.Feature.id.in_(featureIDs)):
+            tag.when_updated = datetime.datetime.utcnow()
         # Delete
         Session.execute(model.feature_tags_table.delete(model.feature_tags_table.c.feature_id.in_(featureIDs)))
         Session.execute(model.features_table.delete(model.features_table.c.id.in_(featureIDs)))

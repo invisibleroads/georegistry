@@ -71,6 +71,7 @@ feature_tags_table = sa.Table('feature_tags', Base.metadata,
 tags_table = sa.Table('tags', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
     sa.Column('text', sa.Unicode(parameter.TAG_LENGTH_MAXIMUM), unique=True, nullable=False),
+    sa.Column('when_updated', sa.DateTime),
 )
 maps_table = sa.Table('maps', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
@@ -78,6 +79,7 @@ maps_table = sa.Table('maps', Base.metadata,
     sa.Column('y', sa.Integer),
     sa.Column('z', sa.Integer),
     sa.Column('geojson', sa.UnicodeText),
+    sa.Column('when_updated', sa.DateTime),
     geoalchemy.GeometryExtensionColumn('center', geoalchemy.Point(srid=900913)),
     geoalchemy.GeometryExtensionColumn('bound_lb', geoalchemy.Point(srid=900913)),
     geoalchemy.GeometryExtensionColumn('bound_rt', geoalchemy.Point(srid=900913)),
@@ -224,7 +226,7 @@ def loadSRIDByProj4():
     # Return
     return sridByProj4
 
-def processTags(tagTexts):
+def processTagTexts(tagTexts):
     'Save changes to tags'
     # Load existing tags
     tags = Session.query(Tag).filter(Tag.text.in_(tagTexts)).all()
