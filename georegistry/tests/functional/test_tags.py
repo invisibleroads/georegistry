@@ -1,4 +1,6 @@
 'Tests for tags controller'
+# Import system modules
+import geoalchemy
 # Import custom modules
 from georegistry import model
 from georegistry.model import Session
@@ -37,12 +39,12 @@ tag1Public, tag1Private, tag2Private = tags
 # Prepare features
 features = []
 featurePacks = [
-    (people[0].id, geoalchemy.WKTSpatialElement('POINT (0 0)'), model.scopePublic),
-    (people[0].id, geoalchemy.WKTSpatialElement('POINT (1 0)'), model.scopePrivate),
-    (people[1].id, geoalchemy.WKTSpatialElement('POINT (0 1)'), model.scopePrivate),
+    (people[0].id, geoalchemy.WKTSpatialElement('POINT (0 0)', srid=900913), model.scopePublic),
+    (people[0].id, geoalchemy.WKTSpatialElement('POINT (1 0)', srid=900913), model.scopePrivate),
+    (people[1].id, geoalchemy.WKTSpatialElement('POINT (0 1)', srid=900913), model.scopePrivate),
 ]
 for featurePack in featurePacks:
-    feature = Session.query(model.Feature).filter_by(owner_id=featurePack[0]).first()
+    feature = Session.query(model.Feature).filter(model.Feature.geometry.equals(featurePack[1])).first()
     if not feature:
         feature = model.Feature()
         feature.owner_id = featurePack[0]
@@ -62,14 +64,14 @@ class TestTagsController(TestController):
     def test_index(self):
         'Make sure we can index tags properly'
         # Initialize
-        testURLName = testURLName
+        testURLName = 'tag_index_'
         # Expect error if we try to specify an unsupported responseFormat
-        self.assertEqualJSON(self.app.get(url(testURLName, responseFormat='json')), 0)
+        self.assertEqualJSON(self.app.get(url(testURLName, responseFormat='xxx')), 0)
         # Check that we only see public tags if we are not authenticated
         responseData = self.assertEqualJSON(self.app.get(url(testURLName, responseFormat='json')), 1)
-        self.assertEqual(responseData['tags'], sorted(x.text for x in [tag1Public]))
+        self.assertEqual(responseData['tags'], sorted([tagPacks[0][0]]))
         # Check that we see public and private tags if we are authenticated
         responseData = self.assertEqualJSON(self.app.get(url(testURLName, responseFormat='json', key=person1Key)), 1)
-        self.assertEqual(responseData['tags'], sorted(x.text for x in [tag1Public, tag1Private]))
+        self.assertEqual(responseData['tags'], sorted([tagPacks[0][0], tagPacks[1][0]]))
         responseData = self.assertEqualJSON(self.app.get(url(testURLName, responseFormat='json', key=person2Key)), 1)
-        self.assertEqual(responseData['tags'], sorted(x.text for x in [tag1Public, tag2Private]))
+        self.assertEqual(responseData['tags'], sorted([tagPacks[0][0], tagPacks[2][0]]))

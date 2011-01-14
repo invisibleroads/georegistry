@@ -1,7 +1,6 @@
 'Tests for people controller'
 # Import system modules
 import re
-import simplejson
 # Import custom modules
 from georegistry import model
 from georegistry.model import Session
@@ -29,9 +28,6 @@ class TestPeopleController(TestController):
         Session.query(model.Person).delete()
         Session.query(model.PersonCandidate).delete()
         Session.commit()
-
-    def assertEqualJSON(self, response, isOk):
-        self.assertEqual(simplejson.loads(response.body)['isOk'], isOk)
 
     def test_index(self):
         'Assert that the index page shows how many accounts are on file'

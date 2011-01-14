@@ -16,6 +16,7 @@ from routes.util import URLGenerator
 # Import system modules
 from unittest import TestCase
 from webtest import TestApp
+import simplejson
 # Import custom modules
 import pylons.test
 
@@ -34,3 +35,11 @@ class TestController(TestCase):
         self.app = TestApp(wsgiapp)
         url._push_object(URLGenerator(config['routes.map'], environ))
         TestCase.__init__(self, *args, **kwargs)
+
+    def assertEqualJSON(self, response, isOk):
+        'Assert response as JSON'
+        responseData = simplejson.loads(response.body)
+        if responseData['isOk'] != isOk:
+            print responseData
+        self.assertEqual(responseData['isOk'], isOk)
+        return responseData

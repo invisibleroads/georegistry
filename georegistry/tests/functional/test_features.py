@@ -52,14 +52,6 @@ class TestFeaturesController(TestController):
         Session.execute(model.tags_table.delete())
         Session.commit()
 
-    def assertEqualJSON(self, response, isOk):
-        'Assert response as JSON'
-        responseData = simplejson.loads(response.body)
-        if responseData['isOk'] != isOk:
-            print responseData
-        self.assertEqual(responseData['isOk'], isOk)
-        return responseData
-
     def test_update(self):
         'Make sure we can update features properly'
         # Initialize
