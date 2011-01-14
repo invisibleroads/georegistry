@@ -28,7 +28,7 @@ Given a integer list of featureIDs, delete corresponding features; delete access
 
 Get tags
 --------
-Return visible tags.
+Return tags with visible features.
 ::
 
     GET    /tags.json (key=string) --> tags=strings

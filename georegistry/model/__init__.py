@@ -228,6 +228,10 @@ def loadSRIDByProj4():
 
 def processTagTexts(tagTexts):
     'Save changes to tags'
+    # Validate
+    longTagTexts = filter(lambda x: len(x) > parameter.TAG_LENGTH_MAXIMUM, tagTexts)
+    if longTagTexts:
+        raise ValueError('Cannot add the following tags because they are too long:\n%s' % '\n'.join(longTagTexts))
     # Load existing tags
     tags = Session.query(Tag).filter(Tag.text.in_(tagTexts)).all()
     # Add tags that don't exist

@@ -37,7 +37,7 @@ def deleteFeatures(key, featureIDs):
     }, 'DELETE')
 
 def getTags(key):
-    'Get visible tags using the GeoRegistry web service'
+    'Get tags with visible features using the GeoRegistry web service'
     # Initialize
     url = baseURL + '/tags'
     # Call
