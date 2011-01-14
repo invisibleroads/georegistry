@@ -61,6 +61,7 @@ function updateMaps() {
         }
         $('#regionLevel').val(regionLevel);
         // Update features
+        // !!! Use zoomToExtent instead
         mapOL.setCenter(new OpenLayers.LonLat(data.countryLongitude, data.countryLatitude), mapOL.getZoomForExtent(new OpenLayers.Bounds(data.countryLeft, data.countryBottom, data.countryRight, data.countryTop)));
     }, 'json');
     // Get geojson

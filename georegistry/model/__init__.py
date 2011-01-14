@@ -75,12 +75,9 @@ tags_table = sa.Table('tags', Base.metadata,
 )
 maps_table = sa.Table('maps', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('x', sa.Integer),
-    sa.Column('y', sa.Integer),
-    sa.Column('z', sa.Integer),
-    sa.Column('geojson', sa.UnicodeText),
-    sa.Column('when_updated', sa.DateTime),
-    geoalchemy.GeometryExtensionColumn('center', geoalchemy.Point(srid=900913)),
+    sa.Column('query_hash', sa.LargeBinary(32), nullable=False),
+    sa.Column('geojson', sa.UnicodeText, nullable=False),
+    sa.Column('when_updated', sa.DateTime, nullable=False),
     geoalchemy.GeometryExtensionColumn('bound_lb', geoalchemy.Point(srid=900913)),
     geoalchemy.GeometryExtensionColumn('bound_rt', geoalchemy.Point(srid=900913)),
 )
@@ -154,10 +151,6 @@ class Map(object):
         'Set center and bounding box'
         pass
 
-    def getCenter(self):
-        center = shapely.wkb.loads(str(self.center.geom_wkb))
-        return center.x, center.y
-
     def getBox(self):
         bound_lb = shapely.wkb.loads(str(self.bound_lb.geom_wkb))
         bound_rt = shapely.wkb.loads(str(self.bound_rt.geom_wkb))
@@ -191,7 +184,6 @@ orm.mapper(Feature, features_table, properties={
 orm.mapper(Tag, tags_table)
 orm.mapper(Map, maps_table, properties={
     'tags': orm.relation(Tag, secondary=map_tags_table, backref='maps'),
-    'center': geoalchemy.GeometryColumn(maps_table.c.center, comparator=geoalchemy.SpatialComparator),
     'bound_lb': geoalchemy.GeometryColumn(maps_table.c.bound_lb, comparator=geoalchemy.SpatialComparator),
     'bound_rt': geoalchemy.GeometryColumn(maps_table.c.bound_rt, comparator=geoalchemy.SpatialComparator),
 })

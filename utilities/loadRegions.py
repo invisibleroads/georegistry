@@ -1,3 +1,5 @@
+# !!! We need to fix this to work with the new database model
+
 #!/usr/bin/env python2.6
 """
 Command-line script to load GADM regions into the database

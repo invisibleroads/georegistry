@@ -1,3 +1,6 @@
+.. Add example uses of Python wrapper API
+.. Add example uses of web service requests
+
 GeoRegistry API
 ===============
 - The ``key`` argument is an API key assigned on registration.  If unspecified, the user can only retrieve public features.
@@ -6,8 +9,7 @@ GeoRegistry API
     POST   /features (key=string, proj4=string, featureCollection=geojson, tags=strings, isPublic=binary) --> isOk=binary, featureIDs=integers
     DELETE /features (key=string, featureIDs=integers) --> isOk=binary
     GET    /tags.json (key=string) --> tags=strings
-    GET    /maps.json (key=string, proj4=string, tags=strings) --> featureCollection=geojson
-    GET    /maps/{Z}/{X}/{Y}.json (key=string, proj4=string, tags=strings) --> featureCollection=geojson
+    GET    /maps.json (key=string, proj4=string, tags=strings, bbox=reals) --> featureCollection=geojson
 
 
 Edit features
@@ -36,8 +38,7 @@ Return tags with visible features.
 
 Render maps
 -----------
-Given desired tags and desired proj4 spatial reference, get visible geojson features.  Optionally, specify zoom level and tile coordinates.
+Given desired tags and desired proj4 spatial reference, get visible geojson features.  Optionally, specify a bounding box (minimum latitude, minimum longitude, maximum latitude, maximum longitude).
 ::
 
-    GET    /maps.json (key=string, proj4=string, tags=strings) --> featureCollection=geojson
-    GET    /maps/{Z}/{X}/{Y}.json (key=string, proj4=string, tags=strings) --> featureCollection=geojson
+    GET    /maps.json (key=string, proj4=string, tags=strings, bbox=reals) --> featureCollection=geojson
