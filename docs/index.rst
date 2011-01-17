@@ -158,7 +158,7 @@ Return tags with visible features.
 
     GET    /tags.json (key=string) --> tags=strings
 
-jQuery
+In jQuery, multiple tags will be separated by newlines.
 ::
 
     $.get('http://georegistry.org/tags.json', {
@@ -167,7 +167,7 @@ jQuery
         var tags = data.split('\n');
     });
 
-Python
+In Python, multiple tags will be a list.
 ::
 
     tags = georegistry.getTags(
@@ -186,7 +186,7 @@ Given desired tags and desired spatial reference srid, get visible geojson featu
 
     GET    /maps.json (key=string, srid=integer, tags=strings, bbox=reals, simplified=binary) --> featureCollection=geojson
 
-jQuery
+In jQuery, you can retrieve the raw geojson.
 ::
     
     $.get('http://georegistry.org/maps.json', {
@@ -199,7 +199,7 @@ jQuery
         var mapGeoJSON = data;
     });
 
-Python
+In Python, you can retrieve the raw geojson.
 ::
 
     mapGeoJSON = georegistry.viewMaps(
@@ -212,6 +212,20 @@ Python
 
 OpenLayers
 ::
+
+    layerOL = new OpenLayers.Layer.Vector('Features', {
+        projection: new OpenLayers.Projection('EPSG:4326'),
+        strategies: [new OpenLayers.Strategy.BBOX()],
+        protocol: new OpenLayers.Protocol.HTTP({
+            url: "http://georegistry.org/maps.json",
+            params: {
+                key: YOUR_API_KEY,
+                srid: 4326,
+                tags: 'flights\nparties'
+            },
+            format: new OpenLayers.Format.GeoJSON()
+        })
+    });
 
 Polymaps
 ::

@@ -12,6 +12,12 @@ ${h.stylesheet_link('/files/openlayers/theme/default/style.css')}
 ${h.stylesheet_link('/files/openlayers/theme/default/google.css')}
 ${h.javascript_link('/files/openlayers/OpenLayers.js')}
 ${h.javascript_link('http://maps.google.com/maps/api/js?sensor=false')}
+<style>
+.olLayerGoogleCopyright {display: none}
+</style>
+<script>
+var mapOL, layerOL;
+</script>
 </%def>
 
 <%def name="js()">
@@ -24,7 +30,7 @@ person = Session.query(model.Person).get(personID)
 personKey = person.key if person else ''
 %>
 // Make map using OpenLayers
-var mapOL = new OpenLayers.Map('mapOL'), layerOL;
+mapOL = new OpenLayers.Map('mapOL');
 mapOL.addControl(new OpenLayers.Control.LayerSwitcher());
 mapOL.addLayers([
     new OpenLayers.Layer.Google("Google Physical", {type: google.maps.MapTypeId.TERRAIN}),
@@ -32,6 +38,7 @@ mapOL.addLayers([
     new OpenLayers.Layer.Google("Google Hybrid", {type: google.maps.MapTypeId.HYBRID, numZoomLevels: 20}),
     new OpenLayers.Layer.Google("Google Satellite", {type: google.maps.MapTypeId.SATELLITE, numZoomLevels: 22})
 ]);
+mapOL.setCenter((new OpenLayers.LonLat(-74.0059731, 40.7143528)).transform(new OpenLayers.Projection('EPSG:4326'), mapOL.getProjectionObject()), 0);
 // Define controls
 $('#tagText').change(updateMaps);
 // Define functions
@@ -45,22 +52,20 @@ function updateMaps() {
         layerOL.destroy();
     }
     layerOL = new OpenLayers.Layer.Vector('Features', {
+        projection: new OpenLayers.Projection('EPSG:4326'),
         strategies: [new OpenLayers.Strategy.BBOX()],
         protocol: new OpenLayers.Protocol.HTTP({
             url: "${h.url('map_view_', responseFormat='json')}",
             params: {
                 key: "${personKey}",
-                srid: 3857,
+                srid: 4326,
                 tags: tagText
             },
-            format: new OpenLayers.Format.GeoJSON(),
-            callback: function() {
-                alert('hey');
-                mapOL.zoomToExtent(layerOL.getDataExtent());
-            }
+            format: new OpenLayers.Format.GeoJSON()
         })
     });
     mapOL.addLayer(layerOL);
+    layerOL.refresh();
 }
 // Prepare page
 updateMaps();
