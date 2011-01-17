@@ -3,7 +3,9 @@
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 import hashlib
+import datetime
 import geoalchemy
+import geoalchemy.postgis
 import shapely.wkb
 import osgeo.osr
 # Import custom modules
@@ -62,7 +64,7 @@ features_table = sa.Table('features', Base.metadata,
     sa.Column('owner_id', sa.ForeignKey('people.id')),
     sa.Column('properties', sa.PickleType(mutable=False)),
     sa.Column('scope', sa.Integer, default=scopePrivate),
-    geoalchemy.GeometryExtensionColumn('geometry', geoalchemy.Geometry(srid=900913), nullable=False),
+    geoalchemy.GeometryExtensionColumn('geometry', geoalchemy.Geometry, nullable=False),
 )
 feature_tags_table = sa.Table('feature_tags', Base.metadata,
     sa.Column('feature_id', sa.ForeignKey('features.id')),
@@ -71,19 +73,13 @@ feature_tags_table = sa.Table('feature_tags', Base.metadata,
 tags_table = sa.Table('tags', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
     sa.Column('text', sa.Unicode(parameter.TAG_LENGTH_MAXIMUM), unique=True, nullable=False),
-    sa.Column('when_updated', sa.DateTime),
+    sa.Column('when_updated', sa.DateTime, default=datetime.datetime.utcnow()),
 )
 maps_table = sa.Table('maps', Base.metadata,
     sa.Column('id', sa.Integer, primary_key=True),
     sa.Column('query_hash', sa.LargeBinary(32), nullable=False),
     sa.Column('geojson', sa.UnicodeText, nullable=False),
-    sa.Column('when_updated', sa.DateTime, nullable=False),
-    geoalchemy.GeometryExtensionColumn('bound_lb', geoalchemy.Point(srid=900913)),
-    geoalchemy.GeometryExtensionColumn('bound_rt', geoalchemy.Point(srid=900913)),
-)
-map_tags_table = sa.Table('map_tags', Base.metadata,
-    sa.Column('map_id', sa.ForeignKey('maps.id')),
-    sa.Column('tag_id', sa.ForeignKey('tags.id')),
+    sa.Column('when_updated', sa.DateTime, default=datetime.datetime.utcnow()),
 )
 
 
@@ -138,23 +134,12 @@ class Tag(object):
     def __repr__(self):
         return "<Tag(id=%s)>" % self.id
 
+    def updateTimestamp(self):
+        self.when_updated = datetime.datetime.utcnow()
+
 
 class Map(object):
     'GeoJSON cache'
-
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def refresh(self):
-        'Set center and bounding box'
-        pass
-
-    def getBox(self):
-        bound_lb = shapely.wkb.loads(str(self.bound_lb.geom_wkb))
-        bound_rt = shapely.wkb.loads(str(self.bound_rt.geom_wkb))
-        return bound_lb.x, bound_lb.y, bound_rt.x, bound_rt.y
 
     def __repr__(self):
         return "<Map(id=%s)>" % self.id
@@ -178,67 +163,72 @@ orm.mapper(SMSAddress, sms_addresses_table, properties={
 })
 orm.mapper(Feature, features_table, properties={
     'owner': orm.relation(Person, backref='features'),
-    'geometry': geoalchemy.GeometryColumn(features_table.c.geometry, comparator=geoalchemy.SpatialComparator),
+    'geometry': geoalchemy.GeometryColumn(features_table.c.geometry, comparator=geoalchemy.postgis.PGComparator),
     'tags': orm.relation(Tag, secondary=feature_tags_table, backref='features'),
 })
-orm.mapper(Tag, tags_table)
-orm.mapper(Map, maps_table, properties={
-    'tags': orm.relation(Tag, secondary=map_tags_table, backref='maps'),
-    'bound_lb': geoalchemy.GeometryColumn(maps_table.c.bound_lb, comparator=geoalchemy.SpatialComparator),
-    'bound_rt': geoalchemy.GeometryColumn(maps_table.c.bound_rt, comparator=geoalchemy.SpatialComparator),
+orm.mapper(Tag, tags_table, properties={
+    'text': orm.column_property(tags_table.c.text, comparator_factory=LowerCaseComparator),
 })
+orm.mapper(Map, maps_table)
 
 
 # DDLs
 
 geoalchemy.GeometryDDL(features_table)
-geoalchemy.GeometryDDL(maps_table)
 
 
 # Helpers
 
-def simplifyProj(proj4):
+def simplifyProj4(proj4):
     'Simplify proj4 string'
     spatialReference = osgeo.osr.SpatialReference()
     if spatialReference.ImportFromProj4(str(proj4)) != 0:
         return
     return spatialReference.ExportToProj4()
 
-def loadSRIDByProj4():
-    'Generate a dictionary mapping proj4 to srid'
-    # Initialize
-    sridByProj4 = {}
+def getSRID(proj4):
+    'Convert proj4 to srid'
+    # Simplify
+    proj4Simplified = simplifyProj4(proj4)
+    if not proj4Simplified:
+        raise GeoRegistryError('Must specify valid proj4 spatial reference')
     # For each spatial reference,
-    for proj4, srid in Session.execute('SELECT proj4text, srid FROM spatial_ref_sys'):
+    for proj4Standard, srid in Session.execute('SELECT proj4text, srid FROM spatial_ref_sys'):
         # Skip empty proj4s
-        if not proj4.strip():
+        if not proj4Standard.strip():
             continue
-        # Store
-        sridByProj4[simplifyProj(proj4)] = srid
-    # Return
-    return sridByProj4
+        # If we have a match,
+        if simplifyProj4(proj4Standard) == proj4Simplified:
+            return srid
+    # If we have no matches, raise exception
+    raise GeoRegistryError('Could not recognize proj4 spatial reference')
 
-def processTagTexts(tagTexts):
-    'Save changes to tags'
-    # Validate
+def getTags(string, addMissing=False):
+    'Return corresponding tags'
+    # Load tagTexts and discard empty lines
+    tagTexts = filter(lambda x: x, (x.strip() for x in string.splitlines()))
+    if not tagTexts:
+        raise GeoRegistryError('Must specify at least one tag in tags')
+    # Check whether tagTexts are too long
     longTagTexts = filter(lambda x: len(x) > parameter.TAG_LENGTH_MAXIMUM, tagTexts)
     if longTagTexts:
-        raise ValueError('Cannot add the following tags because they are too long:\n%s' % '\n'.join(longTagTexts))
-    # Load existing tags
-    tags = Session.query(Tag).filter(Tag.text.in_(tagTexts)).all()
-    # Add tags that don't exist
-    for tagText in set(tagTexts).difference(tag.text for tag in tags):
-        tagText = tagText.strip()
-        if not tagText:
-            raise ValueError('Cannot add a tag without text')
-        tag = Tag(tagText)
-        tags.append(tag)
-        Session.add(tag)
-    Session.commit()
+        raise GeoRegistryError('Cannot add the following tags because they are too long:\n%s' % '\n'.join(longTagTexts))
+    # Check whether tags exist
+    missingTagTexts = list(set(tagTexts).difference(tag.text for tag in Session.query(Tag).filter(Tag.text.in_(tagTexts))))
+    if missingTagTexts:
+        # If we are not supposed to add missing tags,
+        if not addMissing:
+            raise GeoRegistryError('Cannot match the following tags: %s' % missingTagTexts)
+        # Add tags that don't exist
+        Session.execute(tags_table.insert(), [{
+            'text': x,
+        } for x in missingTagTexts])
+        # Commit
+        Session.commit()
     # Return
-    return tags
+    return Session.query(Tag).filter(Tag.text.in_(tagTexts)).all()
 
-def getFeatures(featureIDs, personID):
+def getWritableFeatures(featureIDs, personID):
     'Raise GeoRegistryError if personID does not have write access to the featureIDs'
     # Validate featureIDs
     try:
@@ -251,15 +241,22 @@ def getFeatures(featureIDs, personID):
     # Load
     features = Session.query(Feature).filter(Feature.id.in_(featureIDs)).all()
     # Validate missingIDs
-    missingIDs = set(featureIDs).difference(x.id for x in features)
+    missingIDs = list(set(featureIDs).difference(x.id for x in features))
     if missingIDs:
-        raise GeoRegistryError('Cannot modify featureIDs=%s because they do not exist' % missingIDs)
+        raise GeoRegistryError('Cannot modify featureIDs=%s that do not exist' % missingIDs)
     # Validate blockedIDs
     blockedIDs = [x.id for x in features if x.owner_id != personID]
     if blockedIDs:
         raise GeoRegistryError('Cannot modify featureIDs=%s because you are not the owner' % blockedIDs)
     # Return
     return features
+
+def getFeatureFilter(personID):
+    'Get feature filter for use in queries'
+    featureFilter = Feature.scope == scopePublic
+    if personID:
+        featureFilter |= Feature.owner_id == personID
+    return featureFilter
 
 
 # Errors

@@ -4,7 +4,7 @@
 <head>
 <meta name="author" content="Roy Hyunjin Han" />
 <link rel="shortcut icon" href="/files/favicon.ico">
-${h.javascript_link('/files/jquery-1.4.2.min.js')}
+${h.javascript_link('/files/jquery-1.4.4.min.js')}
 ${h.stylesheet_link('/files/style.css')}
 <title>${h.SITE_NAME} ${self.title()}</title>
 <style>${self.css()}</style>\

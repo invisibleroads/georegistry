@@ -11,7 +11,7 @@ Install geospatial libraries
 ::
 
     su
-        yum install gdal gdal-python geos proj
+        yum install gdal gdal-python geos proj proj-epsg proj-nad
         easy_install -U geoalchemy geojson pylons shapely
 
 

@@ -1,17 +1,17 @@
 'GeoRegistry API Python wrapper'
 # Import system modules
+import urllib
 import urllib2
 import simplejson
 
 
-# Constants
-
-baseURL = 'http://georegistry.org'
+# baseURL = 'http://georegistry.org'
+baseURL = 'http://localhost:5000'
 
 
 # Core
 
-def updateFeatures(key, proj4, featureCollection, tags, isPublic):
+def updateFeatures(key, proj4, featureCollection, tags, public=False):
     'Update features using the GeoRegistry web service'
     # Initialize
     url = baseURL + '/features'
@@ -20,11 +20,11 @@ def updateFeatures(key, proj4, featureCollection, tags, isPublic):
         'key': key,
         'proj4': proj4,
         'featureCollection': featureCollection,
-        'tags': simplejson.dumps(tags),
-        'isPublic': isPublic,
+        'tags': '\n'.join(tags),
+        'public': 1 if public else 0,
     }, 'POST')
     # Return
-    return responseData['featureIDs']
+    return [int(x) for x in responseData.splitlines()]
 
 def deleteFeatures(key, featureIDs):
     'Delete features using the GeoRegistry web service'
@@ -33,7 +33,7 @@ def deleteFeatures(key, featureIDs):
     # Call
     call(url, {
         'key': key,
-        'featureIDs': simplejson.dumps(featureIDs),
+        'featureIDs': '\n'.join(str(x) for x in featureIDs),
     }, 'DELETE')
 
 def getTags(key):
@@ -45,36 +45,35 @@ def getTags(key):
         'key': key,
     }, 'GET')
     # Return
-    return responseData['tags']
+    return responseData.splitlines()
 
-def viewMap(key, proj4, tags, xyz=None):
+def viewMaps(key, proj4, tags, bbox=None, simplified=True):
     'Assemble a map using the GeoRegistry web service'
     # Initialize
     url = baseURL + '/maps'
-    # Expand
-    if xyz:
-        x, y, z = xyz
-        url += '/%s/%s/%s' % (z, x, y)
     # Call
     responseData = call(url + '.json', {
         'key': key,
         'proj4': proj4,
-        'tags': simplejson.dumps(tags),
+        'tags': '\n'.join(tags),
+        'bbox': bbox if bbox else '',
+        'simplified': 1 if simplified else 0,
     }, 'GET')
     # Return
-    return responseData['geojson']
+    return responseData
 
 
 # Helpers
 
-def call(url, data, method):
+def call(url, valueByName, method):
     'Call a method in the GeoRegistry web service'
-    request = Request(method, url, data).read()
-    responseData = simplejson.loads(urllib2.urlopen(request))
-    isOk = int(responseData.get('isOk'))
-    if not isOk:
-        raise GeoRegistryError(responseData['message'])
-    return responseData
+    requestData = urllib.urlencode(valueByName.items())
+    request = Request(method, url, requestData) if method.upper() == 'POST' else Request(method, url + '?' + requestData)
+    try:
+        response = urllib2.urlopen(request)
+    except urllib2.HTTPError, error:
+        raise GeoRegistryError(error.read())
+    return response.read()
 
 class Request(urllib2.Request):
 

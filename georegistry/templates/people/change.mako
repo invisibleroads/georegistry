@@ -97,6 +97,8 @@ $('#nickname').keydown(function(e) {if (e.keyCode == 13) $('#email').focus()});
 $('#email').keydown(function(e) {if (e.keyCode == 13) ajax_save()});
 // Focus
 $('#username').focus();
+// Click
+$('#key').click(function() {this.select()});
 </%def>
 
 <%def name="toolbar()">
@@ -133,6 +135,14 @@ from pylons import config
         <td id=m_status></td>
     </tr>
 % if not c.isNew:
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td class=label><label for=key>Key</label></td>
+        <td class=field><input id=key name=key class=maximumWidth readonly=readonly></td>
+        <td id=m_key>To access the web service API</td>
+    </tr>
     <tr>
         <td>&nbsp;</td>
     </tr>

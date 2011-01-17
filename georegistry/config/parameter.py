@@ -1,6 +1,6 @@
 # Set site parameters
-SITE_NAME = 'georegistry'
-SITE_VERSION = '0.1'
+SITE_NAME = 'GeoRegistry'
+SITE_VERSION = '0.2'
 # Set person parameters
 USERNAME_LENGTH_MINIMUM = 6
 USERNAME_LENGTH_MAXIMUM = 32

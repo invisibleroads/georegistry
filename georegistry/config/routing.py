@@ -35,7 +35,7 @@ def make_map(config):
     map.connect('map_view', '/maps', controller='maps', action='view')
     map.connect('map_view_', '/maps.{responseFormat}', controller='maps', action='view')
     # Redirect index
-    map.redirect('/', '/tags')
+    map.redirect('/', '/maps')
     # Return
     return map
 

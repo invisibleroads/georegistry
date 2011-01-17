@@ -67,6 +67,7 @@ class PeopleController(BaseController):
             'username': person.username,
             'nickname': person.nickname,
             'email': person.email,
+            'key': person.key,
         })
 
     @jsonify

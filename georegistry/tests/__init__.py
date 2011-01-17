@@ -21,7 +21,7 @@ import simplejson
 import pylons.test
 
 
-__all__ = ['environ', 'url', 'TestController']
+__all__ = ['environ', 'url', 'TestController', 'adjust']
 # Invoke websetup with the current config file
 SetupCommand('setup-app').run([pylons.test.pylonsapp.config['__file__']])
 environ = {}
@@ -37,9 +37,15 @@ class TestController(TestCase):
         TestCase.__init__(self, *args, **kwargs)
 
     def assertEqualJSON(self, response, isOk):
-        'Assert response as JSON'
+        'Assert response JSON'
         responseData = simplejson.loads(response.body)
-        if responseData['isOk'] != isOk:
-            print responseData
+        print responseData
         self.assertEqual(responseData['isOk'], isOk)
         return responseData
+
+
+# Helpers
+
+def adjust(valueByName, **kwargs):
+    'Adjust valueByName using specified key and value'
+    return dict(valueByName.items() + kwargs.items())

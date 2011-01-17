@@ -40,7 +40,7 @@ def run(shapePath):
     # Load geometries
     proj4, geometries = geometry_store.load(shapePath)[:2]
     # Initialize
-    srid = sridByProj4[model.simplifyProj(proj4)]
+    srid = sridByProj4[model.simplifyProj4(proj4)]
     regionCount = 0
     # For each geometry,
     for geometry in geometries:
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     options, arguments = optionParser.parse_args()
     # Initialize
     script_process.initialize(options)
-    sridByProj4 = model.loadSRIDByProj4()
+    sridByProj4 = model.getSRIDByProj4()
     countryPackByAlpha3 = loadCountryPackByAlpha3()
     folderPath = arguments[0] if arguments else ''
     # For each shapePath,

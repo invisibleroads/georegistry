@@ -2,10 +2,8 @@
 # Import pylons modules
 from pylons import request, response, session, tmpl_context as c, url
 from pylons.controllers.util import abort, redirect
-from pylons.decorators import jsonify
 # Import system modules
 import simplejson
-import datetime
 import geojson
 import geoalchemy
 # Import custom modules
@@ -17,49 +15,42 @@ from georegistry.lib.base import BaseController, render
 
 class FeaturesController(BaseController):
 
-    @jsonify
     def update(self):
         'Add new or edit existing features'
         # Authenticate via personID or key
         personID = h.getPersonIDViaKey()
         if not personID:
-            return dict(isOk=0, message='Please log in or provide a valid key')
+            abort(401, 'Please log in or provide a valid key')
         # Load srid
-        proj4 = model.simplifyProj(request.params.get('proj4', ''))
-        if not proj4:
-            return dict(isOk=0, message='Must specify valid proj4 spatial reference')
         try:
-            srid = model.loadSRIDByProj4()[proj4]
-        except KeyError:
-            return dict(isOk=0, message='Could not recognize proj4 spatial reference')
+            srid = model.getSRID(request.params.get('proj4', ''))
+        except model.GeoRegistryError, error:
+            abort(400, str(error))
         # Load featureDictionaries
         try:
             featureDictionaries = geojson.loads(request.params.get('featureCollection', ''))['features']
         except simplejson.JSONDecodeError, error:
-            return dict(isOk=0, message='Could not parse featureCollection as geojson (%s)' % error)
+            abort(400, 'Could not parse featureCollection as geojson (%s)' % error)
         except KeyError:
-            return dict(isOk=0, message='Could not get features from featureCollection')
+            abort(400, 'Could not get features from featureCollection')
         if not featureDictionaries:
-            return dict(isOk=0, message='Must specify at least one feature in featureCollection')
-        # Load tagTexts
+            abort(400, 'Must specify at least one feature in featureCollection')
+        # Load tags
         try:
-            tagTexts = simplejson.loads(request.params.get('tags', ''))
-        except simplejson.JSONDecodeError, error:
-            return dict(isOk=0, message='Could not parse tags as json (%s)' % error)
-        if not tagTexts:
-            return dict(isOk=0, message='Must specify at least one tag in tags')
-        # Load isPublic
-        isPublic = request.params.get('isPublic', 0)
-        # Process tags
+            tags = model.getTags(request.params.get('tags', ''), addMissing=True)
+        except model.GeoRegistryError, error:
+            abort(400, str(error))
+        # Load public
+        public = request.params.get('public', 0)
         try:
-            tags = model.processTagTexts(tagTexts)
-        except ValueError, error:
-            return dict(isOk=0, message=str(error))
+            public = int(public)
+        except ValueError:
+            abort(400, 'Could not parse public=%s as an integer' % public)
         # Make sure that the user has write access to the given featureIDs
         try:
-            featureByID = dict((x.id, x) for x in model.getFeatures([x.get('id') for x in featureDictionaries], personID))
+            featureByID = dict((x.id, x) for x in model.getWritableFeatures([x.get('id') for x in featureDictionaries], personID))
         except model.GeoRegistryError, error:
-            return dict(isOk=0, message=str(error))
+            abort(400, str(error))
         # Prepare
         features = []
         # For each featureDictionary,
@@ -72,9 +63,13 @@ class FeaturesController(BaseController):
             try:
                 featureGeometryWKT = geoalchemy.utils.to_wkt(featureGeometry)
             except (KeyError, TypeError), error:
-                return dict(isOk=0, message='Could not parse geometry=%s' % featureGeometry)
+                abort(400, 'Could not parse geometry=%s' % featureGeometry)
             # If featureID is specified, load it
             if featureID is not None:
+                try:
+                    featureID = int(featureID)
+                except ValueError:
+                    abort(400, 'Could not parse featureID=%s as an integer' % featureID)
                 feature = featureByID[featureID]
             # If featureID is not specified, add it
             else:
@@ -83,46 +78,38 @@ class FeaturesController(BaseController):
                 Session.add(feature)
             # Set
             feature.properties = featureProperties
-            feature.scope = model.scopePublic if isPublic else model.scopePrivate
+            feature.scope = model.scopePublic if public else model.scopePrivate
             feature.geometry = geoalchemy.WKTSpatialElement(featureGeometryWKT, srid)
             feature.tags = tags
             # Append
             features.append(feature)
         # Update timestamps for each tag
         for tag in tags:
-            tag.when_updated = datetime.datetime.utcnow()
+            tag.updateTimestamp()
         # Commit
         Session.commit()
-        # Load featureIDs inefficiently
-        featureIDs = [x.id for x in features]
         # Return
-        return dict(isOk=1, featureIDs=featureIDs)
+        return '\n'.join(str(x.id) for x in features)
 
-    @jsonify
     def delete(self):
         'Delete features'
         # Authenticate via personID or key
         personID = h.getPersonIDViaKey()
         if not personID:
-            return dict(isOk=0, message='Please log in or provide a valid key')
+            abort(401, 'Please log in or provide a valid key')
         # Load featureIDs
-        try:
-            featureIDs = simplejson.loads(request.params.get('featureIDs', []))
-        except KeyError:
-            return dict(isOk=0, message='Please specify the featureIDs to delete')
+        featureIDs = request.params.get('featureIDs', '').splitlines()
         if not featureIDs:
-            return dict(isOk=0, message='Must specify at least one featureID in featureIDs')
+            abort(400, 'Must specify at least one featureID in featureIDs')
         # Make sure that the user has write access to the given featureIDs
         try:
-            features = model.getFeatures(featureIDs, personID)
+            model.getWritableFeatures(featureIDs, personID)
         except model.GeoRegistryError, error:
-            return dict(isOk=0, message=str(error))
+            abort(400, str(error))
         # Update timestamps for each tag
         for tag in Session.query(model.Tag).join(model.Tag.features).filter(model.Feature.id.in_(featureIDs)):
-            tag.when_updated = datetime.datetime.utcnow()
+            tag.updateTimestamp()
         # Delete
         Session.execute(model.feature_tags_table.delete(model.feature_tags_table.c.feature_id.in_(featureIDs)))
         Session.execute(model.features_table.delete(model.features_table.c.id.in_(featureIDs)))
         Session.commit()
-        # Return
-        return dict(isOk=1)
