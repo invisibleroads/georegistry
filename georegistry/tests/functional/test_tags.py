@@ -49,13 +49,9 @@ class TestTagsController(TestController):
             (people[1].id, geoalchemy.WKTSpatialElement('POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2,2 3,3 3,3 2,2 2))'), model.scopePrivate),
         ]
         for featurePack in featurePacks:
-            feature = Session.query(model.Feature).filter(model.Feature.geometry.equals(featurePack[1])).first()
-            if not feature:
-                feature = model.Feature()
-                feature.owner_id = featurePack[0]
-                feature.geometry = featurePack[1]
-                feature.scope = featurePack[2]
-                Session.add(feature)
+            feature = model.Feature()
+            feature.owner_id, feature.geometry, feature.scope = featurePack
+            Session.add(feature)
             features.append(feature)
         feature1Public, feature1Private, feature2Private = features
         feature1Public.tags = [tag1Public]

@@ -64,7 +64,7 @@ features_table = sa.Table('features', Base.metadata,
     sa.Column('owner_id', sa.ForeignKey('people.id')),
     sa.Column('properties', sa.PickleType(mutable=False)),
     sa.Column('scope', sa.Integer, default=scopePrivate),
-    geoalchemy.GeometryExtensionColumn('geometry', geoalchemy.Geometry, nullable=False),
+    geoalchemy.GeometryExtensionColumn('geometry', geoalchemy.Geometry(srid=3857), nullable=False),
 )
 feature_tags_table = sa.Table('feature_tags', Base.metadata,
     sa.Column('feature_id', sa.ForeignKey('features.id')),

@@ -50,11 +50,9 @@ class TestMapsController(TestController):
             (people[1].id, geoalchemy.WKTSpatialElement('LINESTRING (40.7143528 -74.0059731, 14.6133333 -90.5352778)'), model.scopePrivate, {'passenger': u'Hélène'}),
         ]
         for featurePack in featurePacks:
-            feature = Session.query(model.Feature).filter(model.Feature.geometry.equals(featurePack[1])).first()
-            if not feature:
-                feature = model.Feature()
-                feature.owner_id, feature.geometry, feature.scope, feature.properties = featurePack
-                Session.add(feature)
+            feature = model.Feature()
+            feature.owner_id, feature.geometry, feature.scope, feature.properties = featurePack
+            Session.add(feature)
             features.append(feature)
         feature1Public, feature1Private, feature2Private = features
         feature1Public.tags = [tag1Public]
