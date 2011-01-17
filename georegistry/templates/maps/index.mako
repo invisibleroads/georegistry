@@ -4,13 +4,14 @@
 
 <%def name="css()">
 #mapOL {position: absolute; top: 0; left: 0; width: 50%; height: 100%}
-#mapPM {position: absolute; top: 0; right: 0; width: 50%; height: 100%}
+#mapPO {position: absolute; top: 0; right: 0; width: 50%; height: 100%}
 </%def>
 
 <%def name="head()">
 ${h.stylesheet_link('/files/openlayers/theme/default/style.css')}
 ${h.stylesheet_link('/files/openlayers/theme/default/google.css')}
 ${h.javascript_link('/files/openlayers/OpenLayers.js')}
+${h.javascript_link('/files/polymaps.min.js')}
 ${h.javascript_link('http://maps.google.com/maps/api/js?sensor=false')}
 <style>
 .olLayerGoogleCopyright {display: none}
@@ -29,6 +30,8 @@ personID = h.getPersonIDViaKey()
 person = Session.query(model.Person).get(personID)
 personKey = person.key if person else ''
 %>
+
+
 // Make map using OpenLayers
 mapOL = new OpenLayers.Map('mapOL');
 mapOL.addControl(new OpenLayers.Control.LayerSwitcher());
@@ -39,14 +42,27 @@ mapOL.addLayers([
     new OpenLayers.Layer.Google("Google Satellite", {type: google.maps.MapTypeId.SATELLITE, numZoomLevels: 22})
 ]);
 mapOL.setCenter((new OpenLayers.LonLat(-74.0059731, 40.7143528)).transform(new OpenLayers.Projection('EPSG:4326'), mapOL.getProjectionObject()), 0);
-// Define controls
-$('#tagText').change(updateMaps);
+
+
+// Make map using Polymaps
+var po = org.polymaps, mapPO, layerPO;
+mapPO = po.map()
+    .container(document.getElementById('mapPO').appendChild(po.svg('svg')))
+    .center({lat: 40.7143528, lon: -74.0059731})
+    .zoom(0)
+    .add(po.interact())
+    .add(po.compass())
+    .add(po.image().url(po.url("http://{S}tile.cloudmade.com/8f066e8fa23c4e0abb89650a38555a58/20760/256/{Z}/{X}/{Y}.png").hosts(["a.", "b.", "c.", ""])));
+
+
 // Define functions
 function updateMaps() {
     // Load parameters
     var tagText = $.trim($('#tagText').val() || "${request.params.get('tags', '') | h}");
     if (!tagText) return;
-    // Set layer
+
+
+    // Update OpenLayers
     if (layerOL) {
         mapOL.removeLayer(layerOL);
         layerOL.destroy();
@@ -66,7 +82,17 @@ function updateMaps() {
     });
     mapOL.addLayer(layerOL);
     layerOL.refresh();
+
+
+    // Update Polymaps
+    if (layerPO) {
+        mapPO.remove(layerPO);
+    }
+    layerPO = po.geoJson().url("${h.url('map_view_', responseFormat='json')}?key=${personKey}&srid=4326&tags=" + tagText + "&bbox={B}");
+    mapPO.add(layerPO);
 }
+// Define controls
+$('#tagText').change(updateMaps);
 // Prepare page
 updateMaps();
 </%def>
@@ -88,4 +114,4 @@ visibleTags = Session.query(model.Tag).join(model.Tag.features).filter(model.get
 </%def>
 
 <div id=mapOL></div>
-<div id=mapPM></div>
+<div id=mapPO></div>
