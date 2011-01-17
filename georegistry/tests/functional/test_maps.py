@@ -45,9 +45,9 @@ class TestMapsController(TestController):
         # Prepare features
         features = []
         featurePacks = [
-            (people[0].id, geoalchemy.WKTSpatialElement('MULTIPOINT (15.7834710000000005 -90.2307590000000062, 37.5665350000000018 126.9779692000000040, 5.5557169999999996 -0.1963060000000000, 14.8361560000000008 -91.5219589999999954)'), model.scopePublic, {'description': 'Santa Eulalia; Seoul; Accra; Xela'}),
-            (people[0].id, geoalchemy.WKTSpatialElement('LINESTRING (41.8781135999999989 -87.6297981999999962, 33.7489953999999983 -84.3879823999999985, 37.7749294999999989 -122.4194154999999995)'), model.scopePrivate, {'description': 'Chicago; Atlanta; San Francisco'}),
-            (people[1].id, geoalchemy.WKTSpatialElement('LINESTRING (40.7143528 -74.0059731, 14.6133333 -90.5352778)'), model.scopePrivate, {'passenger': u'Hélène'}),
+            (people[0].id, geoalchemy.WKTSpatialElement('MULTIPOINT (-90.2307590000000062 15.7834710000000005, 126.9779692000000040 37.5665350000000018, -0.1963060000000000 5.5557169999999996, -91.5219589999999954 14.8361560000000008)'), model.scopePublic, {'description': 'Santa Eulalia; Seoul; Accra; Xela'}),
+            (people[0].id, geoalchemy.WKTSpatialElement('LINESTRING (-87.6297981999999962 41.8781135999999989, -84.3879823999999985 33.7489953999999983, -122.4194154999999995 37.7749294999999989)'), model.scopePrivate, {'description': 'Chicago; Atlanta; San Francisco'}),
+            (people[1].id, geoalchemy.WKTSpatialElement('LINESTRING (-74.0059731 40.7143528, -90.5352778 14.6133333)'), model.scopePrivate, {'passenger': u'Hélène'}),
         ]
         for featurePack in featurePacks:
             feature = model.Feature()
@@ -95,8 +95,8 @@ class TestMapsController(TestController):
         self.app.get(url(urlName, **adjust(p, simplified='xxx')), status=400)
         print 'Check that a view request works properly'
         self.app.get(url(urlName, **p))
-        self.app.get(url(urlName, **adjust(p, bbox='10, -100, 210, 100')))
-        self.app.get(url(urlName, **adjust(p, bbox='10, -100, 210, 100', simplified=0)))
+        self.app.get(url(urlName, **adjust(p, bbox='-180, -90, 180, 90')))
+        self.app.get(url(urlName, **adjust(p, bbox='-180, -90, 180, 90', simplified=0)))
         print 'Check that caching works properly'
         def getCacheTimestamps():
             return [x[0] for x in Session.query(model.Map.when_updated).order_by(model.Map.when_updated)]

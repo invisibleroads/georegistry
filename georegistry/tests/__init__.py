@@ -19,6 +19,8 @@ from webtest import TestApp
 import simplejson
 # Import custom modules
 import pylons.test
+from georegistry import model
+from georegistry.model import Session
 
 
 __all__ = ['environ', 'url', 'TestController', 'adjust']
