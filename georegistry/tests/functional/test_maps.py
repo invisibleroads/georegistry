@@ -4,7 +4,6 @@
 import geoalchemy
 # Import custom modules
 from georegistry import model
-from georegistry.lib import geometry_store
 from georegistry.config import parameter
 from georegistry.model import Session
 from georegistry.tests import *
@@ -46,9 +45,9 @@ class TestMapsController(TestController):
         # Prepare features
         features = []
         featurePacks = [
-            (people[0].id, geoalchemy.WKTSpatialElement('MULTIPOINT((3.5 5.6), (4.8 10.5))'), model.scopePublic, {'population': 100}),
-            (people[0].id, geoalchemy.WKTSpatialElement('MULTILINESTRING((3 4,10 50,20 25),(-5 -8,-10 -8,-15 -4))'), model.scopePrivate, {'life expectancy': 78.3}),
-            (people[1].id, geoalchemy.WKTSpatialElement('MULTIPOLYGON(((1 1,5 1,5 5,1 5,1 1),(2 2,2 3,3 3,3 2,2 2)),((6 3,9 2,9 4,6 3)))'), model.scopePrivate, {'name': u'Montréal'}),
+            (people[0].id, geoalchemy.WKTSpatialElement('MULTIPOINT (15.7834710000000005 -90.2307590000000062, 37.5665350000000018 126.9779692000000040, 5.5557169999999996 -0.1963060000000000, 14.8361560000000008 -91.5219589999999954)'), model.scopePublic, {'description': 'Santa Eulalia; Seoul; Accra; Xela'}),
+            (people[0].id, geoalchemy.WKTSpatialElement('LINESTRING (41.8781135999999989 -87.6297981999999962, 33.7489953999999983 -84.3879823999999985, 37.7749294999999989 -122.4194154999999995)'), model.scopePrivate, {'description': 'Chicago; Atlanta; San Francisco'}),
+            (people[1].id, geoalchemy.WKTSpatialElement('LINESTRING (40.7143528 -74.0059731, 14.6133333 -90.5352778)'), model.scopePrivate, {'passenger': u'Hélène'}),
         ]
         for featurePack in featurePacks:
             feature = Session.query(model.Feature).filter(model.Feature.geometry.equals(featurePack[1])).first()
@@ -77,7 +76,7 @@ class TestMapsController(TestController):
         p = {
             'responseFormat': 'json',
             'key': self.person1Key,
-            'proj4': geometry_store.proj4SM,
+            'srid': 3857,
             'tags': '\n'.join(self.tagTexts[:2]),
             'bbox': '',
             'simplified': 1,
@@ -85,8 +84,10 @@ class TestMapsController(TestController):
         # Test
         print 'Expect error if we try to specify an unsupported responseFormat'
         self.app.get(url(urlName, **adjust(p, responseFormat='xxx')), status=400)
-        print 'Expect error if we submit invalid proj4'
-        self.app.get(url(urlName, **adjust(p, proj4='')), status=400)
+        print 'Expect error if we submit invalid srid'
+        self.app.get(url(urlName, **adjust(p, srid='')), status=400)
+        self.app.post(url(urlName, **adjust(p, srid='xxx')), status=400)
+        self.app.post(url(urlName, **adjust(p, srid='-1')), status=400)
         print 'Expect error if we submit invalid tags'
         self.app.get(url(urlName, **adjust(p, tags='')), status=400)
         self.app.get(url(urlName, **adjust(p, tags='x' * (parameter.TAG_LENGTH_MAXIMUM + 1))), status=400)
@@ -96,8 +97,8 @@ class TestMapsController(TestController):
         self.app.get(url(urlName, **adjust(p, simplified='xxx')), status=400)
         print 'Check that a view request works properly'
         self.app.get(url(urlName, **p))
-        self.app.get(url(urlName, **adjust(p, bbox='0, 0, 5, 5')))
-        self.app.get(url(urlName, **adjust(p, bbox='0, 0, 5, 5', simplified=0)))
+        self.app.get(url(urlName, **adjust(p, bbox='10, -100, 210, 100')))
+        self.app.get(url(urlName, **adjust(p, bbox='10, -100, 210, 100', simplified=0)))
         print 'Check that caching works properly'
         def getCacheTimestamps():
             return [x[0] for x in Session.query(model.Map.when_updated).order_by(model.Map.when_updated)]

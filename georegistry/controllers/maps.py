@@ -30,9 +30,9 @@ class MapsController(BaseController):
         # Authenticate via personID or key
         personID = h.getPersonIDViaKey()
         # Load srid
-        proj4 = request.params.get('proj4', '')
+        srid = request.params.get('srid', '')
         try:
-            srid = model.getSRID(proj4)
+            proj4 = model.validateSRID(srid)
         except model.GeoRegistryError, error:
             abort(400, str(error))
         # Load tags

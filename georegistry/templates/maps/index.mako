@@ -18,7 +18,6 @@ ${h.javascript_link('http://maps.google.com/maps/api/js?sensor=false')}
 <%
 from georegistry import model
 from georegistry.model import Session
-from georegistry.lib import geometry_store
 
 personID = h.getPersonIDViaKey()
 person = Session.query(model.Person).get(personID)
@@ -51,7 +50,7 @@ function updateMaps() {
             url: "${h.url('map_view_', responseFormat='json')}",
             params: {
                 key: "${personKey}",
-                proj4: "${geometry_store.proj4SM}",
+                srid: 3857,
                 tags: tagText
             },
             format: new OpenLayers.Format.GeoJSON(),

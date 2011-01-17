@@ -11,14 +11,14 @@ baseURL = 'http://localhost:5000'
 
 # Core
 
-def updateFeatures(key, proj4, featureCollection, tags, public=False):
+def updateFeatures(key, srid, featureCollection, tags, public=False):
     'Update features using the GeoRegistry web service'
     # Initialize
     url = baseURL + '/features'
     # Call
     responseData = call(url, {
         'key': key,
-        'proj4': proj4,
+        'srid': srid,
         'featureCollection': featureCollection,
         'tags': '\n'.join(tags),
         'public': 1 if public else 0,
@@ -47,14 +47,14 @@ def getTags(key):
     # Return
     return responseData.splitlines()
 
-def viewMaps(key, proj4, tags, bbox=None, simplified=True):
+def viewMaps(key, srid, tags, bbox=None, simplified=True):
     'Assemble a map using the GeoRegistry web service'
     # Initialize
     url = baseURL + '/maps'
     # Call
     responseData = call(url + '.json', {
         'key': key,
-        'proj4': proj4,
+        'srid': srid,
         'tags': '\n'.join(tags),
         'bbox': bbox if bbox else '',
         'simplified': 1 if simplified else 0,

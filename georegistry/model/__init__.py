@@ -203,6 +203,19 @@ def getSRID(proj4):
     # If we have no matches, raise exception
     raise GeoRegistryError('Could not recognize proj4 spatial reference')
 
+def validateSRID(srid):
+    'Make sure we have a valid SRID'
+    if not srid:
+        raise GeoRegistryError('Must specify spatial reference srid')
+    try:
+        srid = int(srid)
+    except ValueError:
+        raise GeoRegistryError('Could not parse srid=%s as an integer' % srid)
+    result = Session.execute('SELECT proj4text FROM spatial_ref_sys WHERE srid=:srid', dict(srid=srid)).fetchone()
+    if not result:
+        raise GeoRegistryError('Could not recognize srid=%s' % srid)
+    return result[0]
+
 def getTags(string, addMissing=False):
     'Return corresponding tags'
     # Load tagTexts and discard empty lines

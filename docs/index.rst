@@ -5,25 +5,25 @@ GeoRegistry API
 - Elements of the ``featureIDs`` argument are separated by newlines.
 ::
 
-    POST   /features (key=string, proj4=string, featureCollection=geojson, tags=strings, public=binary) --> featureIDs=integers
+    POST   /features (key=string, srid=integer, featureCollection=geojson, tags=strings, public=binary) --> featureIDs=integers
     DELETE /features (key=string, featureIDs=integers)
     GET    /tags.json (key=string) --> tags=strings
-    GET    /maps.json (key=string, proj4=string, tags=strings, bbox=reals, simplified=binary) --> featureCollection=geojson
+    GET    /maps.json (key=string, srid=integer, tags=strings, bbox=reals, simplified=binary) --> featureCollection=geojson
 
 
 Update features
 ---------------
-Given geojson features, string tags and proj4 spatial reference, save each feature with the given properties and tags.  Set ``public=1`` to make the features publicly visible.  Specify ``id`` in a geojson feature to overwrite an existing feature; edit access is restricted to the API key that originally created the feature.
+Given a geojson featureCollection, string tags and spatial reference srid, save each feature with the given properties and tags.  Set ``public=1`` to make the features publicly visible.  Specify ``id`` in a geojson feature to overwrite an existing feature; edit access is restricted to the API key that originally created the feature.
 ::
 
-    POST   /features (key=string, proj4=string, featureCollection=geojson, tags=strings, public=binary) --> featureIDs=integers
+    POST   /features (key=string, srid=integer, featureCollection=geojson, tags=strings, public=binary) --> featureIDs=integers
 
 In jQuery, multiple tags should be separated by newlines.
 ::
 
     $.post('http://georegistry.org/features', {
         key: YOUR_API_KEY,
-        proj4: '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs',
+        srid: 4326,
         featureCollection: '{                                              \
             "type": "FeatureCollection",                                   \
             "features": [                                                  \
@@ -69,7 +69,7 @@ In Python, multiple tags should be entered as a list.
     # Add new features
     featureIDs = georegistry.updateFeatures(
         key=YOUR_API_KEY,
-        proj4='+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs',
+        srid=4326,
         featureCollection="""{
             "type": "FeatureCollection", 
             "features": [
@@ -95,7 +95,7 @@ In Python, multiple tags should be entered as a list.
     # Edit existing features by specifying featureIDs
     featureIDs = georegistry.updateFeatures(
         key=YOUR_API_KEY,
-        proj4='+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs',
+        srid=4326,
         featureCollection="""{
             "type": "FeatureCollection", 
             "features": [{
@@ -170,17 +170,17 @@ Python
 
 Render maps
 -----------
-Given desired tags and desired proj4 spatial reference, get visible geojson features.  Optionally, specify a bounding box (minimum latitude, minimum longitude, maximum latitude, maximum longitude).  Set ``simplified=0`` to disable smart simplification.
+Given desired tags and desired spatial reference srid, get visible geojson features.  Optionally, specify a bounding box (minimum latitude, minimum longitude, maximum latitude, maximum longitude).  Set ``simplified=0`` to disable smart simplification.
 ::
 
-    GET    /maps.json (key=string, proj4=string, tags=strings, bbox=reals, simplified=binary) --> featureCollection=geojson
+    GET    /maps.json (key=string, srid=integer, tags=strings, bbox=reals, simplified=binary) --> featureCollection=geojson
 
 jQuery
 ::
     
     $.get('http://georegistry.org/maps.json', {
         key: YOUR_API_KEY,
-        proj4: '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs',
+        srid: 3857,
         tags: 'parties',
         bbox: '10, -100, 210, 100',
         simplified: 1
@@ -193,7 +193,7 @@ Python
 
     mapGeoJSON = georegistry.viewMaps(
         key=YOUR_API_KEY,
-        proj4='+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs',
+        srid=3857,
         tags=['parties'],
         bbox='10, -100, 210, 100',
         simplified=True,

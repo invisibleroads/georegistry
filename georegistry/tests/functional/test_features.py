@@ -7,7 +7,6 @@ import urllib
 # Import custom modules
 from georegistry import model
 from georegistry.config import parameter
-from georegistry.lib import geometry_store
 from georegistry.model import Session
 from georegistry.tests import *
 
@@ -59,7 +58,7 @@ class TestFeaturesController(TestController):
         urlName = 'feature_update'
         p = {
             'key': self.person1Key,
-            'proj4': geometry_store.proj4LL,
+            'srid': 4326,
             'featureCollection': geojson.dumps(geojson.FeatureCollection([
                 geojson.Feature(geometry=geojson.Point((0, 0)), properties={
                     'population': 100,
@@ -72,8 +71,10 @@ class TestFeaturesController(TestController):
         print 'Expect error if we try to login without authentication'
         self.app.post(url(urlName), status=401)
         self.app.post(url(urlName), adjust(p, key=''), status=401)
-        print 'Expect error if we submit invalid proj4'
-        self.app.post(url(urlName), adjust(p, proj4=''), status=400)
+        print 'Expect error if we submit invalid srid'
+        self.app.post(url(urlName), adjust(p, srid=''), status=400)
+        self.app.post(url(urlName), adjust(p, srid='xxx'), status=400)
+        self.app.post(url(urlName), adjust(p, srid='-1'), status=400)
         print 'Expect error if we submit invalid featureCollection'
         self.app.post(url(urlName), adjust(p, featureCollection=''), status=400)
         self.app.post(url(urlName), adjust(p, featureCollection=geojson.dumps(geojson.FeatureCollection([]))), status=400)
