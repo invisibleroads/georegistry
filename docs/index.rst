@@ -1,6 +1,6 @@
 GeoRegistry API
 ===============
-`GeoRegistry.org <http://georegistry.org>`_ is a free web service for storing and querying geospatial data.
+`GeoRegistry.org <http://georegistry.org>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.
 
 - The ``key`` argument is an API key assigned on registration and visible on your account page.  If unspecified, only public features are visible.
 - Elements of the ``tags`` argument are separated by newlines.

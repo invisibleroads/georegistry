@@ -1,0 +1,6 @@
+pushd docs
+rm -Rf _build
+make html
+popd
+rm -Rf georegistry/public/docs/*
+cp -R docs/_build/html/* georegistry/public/docs
