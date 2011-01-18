@@ -10,6 +10,7 @@ import os
 import re
 import csv
 import glob
+import osgeo.ogr
 import osgeo.osr
 import itertools
 import geoalchemy
@@ -44,12 +45,18 @@ def run(shapePath):
     tags = model.getTags('\n'.join(tagTexts), addMissing=True)
     # For each geometry,
     for shapelyGeometry, fieldPack in itertools.izip(shapelyGeometries, fieldPacks):
+        # Gather properties
+        featureProperties = {}
+        for fieldValue, (fieldName, fieldType) in itertools.izip(fieldPack, fieldDefinitions):
+            if fieldType == osgeo.ogr.OFTString and fieldValue:
+                fieldValue = fieldValue.decode('latin-1')
+            featureProperties[fieldName] = fieldValue
         # Make feature
         feature = model.Feature()
         feature.owner_id = personID
         feature.geometry = geoalchemy.WKBSpatialElement(buffer(shapelyGeometry.wkb), srid)
         feature.scope = model.scopePublic
-        feature.properties = dict((fieldName, fieldValue) for fieldValue, (fieldName, fieldType) in itertools.izip(fieldPack, fieldDefinitions))
+        feature.properties = featureProperties
         feature.tags = tags
         Session.add(feature)
         # Increment

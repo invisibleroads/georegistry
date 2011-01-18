@@ -6,8 +6,9 @@
 #mapOL {position: absolute; top: 0; left: 0; width: 50%; height: 100%}
 #mapPO {position: absolute; top: 0; right: 0; width: 50%; height: 100%}
 #featuresPO {
-    fill: none;
-    stroke: black;
+    fill: yellow;
+    fill-opacity: 0.1;
+    stroke: yellow;
     stroke-width: 2px;
     vector-effect: non-scaling-stroke;
 }
@@ -90,8 +91,9 @@ function updateMaps() {
             format: new OpenLayers.Format.GeoJSON()
         }),
         styleMap: new OpenLayers.StyleMap({
-            fillColor: 'black',
-            strokeColor: 'black',
+            fillColor: 'yellow',
+            fillOpacity: 0.1,
+            strokeColor: 'yellow',
             strokeWidth: 2,
             pointRadius: 5
         })
@@ -120,11 +122,11 @@ from georegistry import model
 from georegistry.model import Session
 
 personID = h.getPersonIDViaKey()
-visibleTags = Session.query(model.Tag).join(model.Tag.features).filter(model.getFeatureFilter(personID))
+tagQuery = Session.query(model.Tag).join(model.Tag.features).filter(model.getFeatureFilter(personID))
 %>
 <select id=tagText>
     <option value=""></option>
-% for tag in visibleTags:
+% for tag in tagQuery.order_by(model.Tag.text):
     <option value="${tag.text | h}">${tag.text}</option>
 % endfor
 </select>

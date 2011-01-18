@@ -105,7 +105,7 @@ class MapsController(BaseController):
                 abort(400, 'Could not execute query (%s)' % str(error))
             # Store map in cache
             cachedMap = model.Map()
-            cachedMap.geojson = geojson.dumps(geojson.FeatureCollection(geojsonFeatures)).decode('utf-8')
+            cachedMap.geojson = unicode(geojson.dumps(geojson.FeatureCollection(geojsonFeatures)), 'utf-8')
             cachedMap.query_hash = queryStringHash
             cachedMap.when_updated = datetime.datetime.utcnow()
             Session.add(cachedMap)
