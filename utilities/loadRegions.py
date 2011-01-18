@@ -1,6 +1,4 @@
-# !!! We need to fix this to work with the new database model
-
-#!/usr/bin/env python2.6
+#!/usr/bin/env python2.7
 """
 Command-line script to load GADM regions into the database
 
@@ -13,68 +11,77 @@ import re
 import csv
 import glob
 import osgeo.osr
+import itertools
 import geoalchemy
-import shapely.geometry
 # Import custom modules
 import script_process
 from georegistry import model
-from georegistry.lib import geometry_store, store
-from georegistry.model import Base, Session
+from georegistry.lib import store, geometry_store
+from georegistry.model import Session
 
+
+# Core
 
 def run(shapePath):
     'Load regions from shapefile'
     # Parse shapePath
     shapeName = store.extractFileBaseName(shapePath)
-    alpha3, level = re.match(r'(.*)_adm(\d+)', shapeName).groups()
-    alpha3 = alpha3.upper()
-    level = int(level)
-    # Load country
-    countryName, alpha2 = countryPackByAlpha3[alpha3]
-    country = Session.query(model.Country).filter(model.Country.name==countryName).first()
-    if not country:
-        print 'Adding country: ' + countryName
-        country = model.Country(countryName, alpha2, alpha3)
-        Session.add(country)
-        Session.commit()
-    # Load geometries
-    proj4, geometries = geometry_store.load(shapePath)[:2]
+    countryAlpha3, administrativeLevel = re.match(r'(.*)_adm(\d+)', shapeName).groups()
+    countryAlpha3 = countryAlpha3.upper()
+    administrativeLevel = int(administrativeLevel)
+    # Load
+    countryName = countryPackByAlpha3[countryAlpha3][0]
+    proj4, shapelyGeometries, fieldPacks, fieldDefinitions = geometry_store.load(shapePath)
     # Initialize
-    srid = sridByProj4[model.simplifyProj4(proj4)]
-    regionCount = 0
+    srid = getSRID(proj4)
+    areaCount = 0
+    # Make tags
+    tagTexts = [
+        countryName + (u': Administrative Level %s' % administrativeLevel if administrativeLevel > 0 else ''),
+    ]
+    if administrativeLevel == 0:
+        tagTexts.append(u'* countries')
+    tags = model.getTags('\n'.join(tagTexts), addMissing=True)
     # For each geometry,
-    for geometry in geometries:
-        # Prepare
-        geometry = geoalchemy.WKBSpatialElement(buffer(geometry.wkb), srid)
-        # Add region
-        Session.add(model.Region(geometry, country.id, level))
-        regionCount += 1
-    # If we are looking at the country outline,
-    if level == 0:
-        # Merge geometries
-        countryGeometry = reduce(lambda x, y: x.union(y), geometries)
-        # Compute center
-        country.center = geoalchemy.WKBSpatialElement(buffer(countryGeometry.centroid.wkb), srid)
-        # Compute bounds
-        left, bottom, right, top = countryGeometry.bounds
-        country.bound_lb = geoalchemy.WKBSpatialElement(buffer(shapely.geometry.Point(left, bottom).wkb), srid)
-        country.bound_rt = geoalchemy.WKBSpatialElement(buffer(shapely.geometry.Point(right, top).wkb), srid)
+    for shapelyGeometry, fieldPack in itertools.izip(shapelyGeometries, fieldPacks):
+        # Make feature
+        feature = model.Feature()
+        feature.owner_id = personID
+        feature.geometry = geoalchemy.WKBSpatialElement(buffer(shapelyGeometry.wkb), srid)
+        feature.scope = model.scopePublic
+        feature.properties = dict((fieldName, fieldValue) for fieldValue, (fieldName, fieldType) in itertools.izip(fieldPack, fieldDefinitions))
+        feature.tags = tags
+        Session.add(feature)
+        # Increment
+        areaCount += 1
     # Commit
     Session.commit()
     # Return
-    return '%s: %s regions' % (shapeName, regionCount)
+    return '%s: %s' % (shapeName, areaCount)
 
+def simplifyProj4(proj4):
+    'Simplify proj4 string'
+    spatialReference = osgeo.osr.SpatialReference()
+    if spatialReference.ImportFromProj4(str(proj4)) != 0:
+        return
+    return spatialReference.ExportToProj4()
 
-def loadCountryPackByAlpha3():
-    'Generate a dictionary mapping alpha3 to countryPack'
-    # Initialize
-    countryPackByAlpha3 = {}
-    countryPath = store.expandBasePath('utilities/countries.csv')
-    # For each row,
-    for countryName, alpha2, alpha3 in csv.reader(open(countryPath, 'rt')):
-        countryPackByAlpha3[alpha3.upper()] = countryName, alpha2.upper()
-    # Return
-    return countryPackByAlpha3
+def getSRID(proj4):
+    'Convert proj4 to srid'
+    # Simplify
+    proj4Simplified = simplifyProj4(proj4)
+    if not proj4Simplified:
+        raise model.GeoRegistryError('Must specify valid proj4 spatial reference')
+    # For each spatial reference,
+    for proj4Standard, srid in Session.execute('SELECT proj4text, srid FROM spatial_ref_sys'):
+        # Skip empty proj4s
+        if not proj4Standard.strip():
+            continue
+        # If we have a match,
+        if simplifyProj4(proj4Standard) == proj4Simplified:
+            return srid
+    # If we have no matches, raise exception
+    raise model.GeoRegistryError('Could not recognize proj4 spatial reference')
 
 
 # If we are running standalone,
@@ -82,12 +89,17 @@ if __name__ == '__main__':
     # Parse
     optionParser = script_process.buildOptionParser()
     options, arguments = optionParser.parse_args()
+    # Load countryPackByAlpha3
+    countryPackByAlpha3 = {}
+    countryPath = store.expandBasePath('utilities/countries.csv')
+    for countryName, countryAlpha2, countryAlpha3 in csv.reader(open(countryPath, 'rt')):
+        countryPackByAlpha3[countryAlpha3.upper()] = countryName, countryAlpha2.upper()
     # Initialize
     script_process.initialize(options)
-    sridByProj4 = model.getSRIDByProj4()
-    countryPackByAlpha3 = loadCountryPackByAlpha3()
+    person = Session.query(model.Person).filter_by(username='administrator').first()
+    personID = person.id
     folderPath = arguments[0] if arguments else ''
-    # For each shapePath,
-    for shapePath in sorted(glob.glob(os.path.join(folderPath, '*.shp'))):
+    # For each filePath,
+    for filePath in sorted(glob.glob(os.path.join(folderPath, '*.shp'))):
         # Run
-        print run(shapePath)
+        print run(filePath)

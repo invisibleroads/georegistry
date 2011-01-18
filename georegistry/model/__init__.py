@@ -180,30 +180,6 @@ geoalchemy.GeometryDDL(features_table)
 
 # Helpers
 
-def simplifyProj4(proj4):
-    'Simplify proj4 string'
-    spatialReference = osgeo.osr.SpatialReference()
-    if spatialReference.ImportFromProj4(str(proj4)) != 0:
-        return
-    return spatialReference.ExportToProj4()
-
-def getSRID(proj4):
-    'Convert proj4 to srid'
-    # Simplify
-    proj4Simplified = simplifyProj4(proj4)
-    if not proj4Simplified:
-        raise GeoRegistryError('Must specify valid proj4 spatial reference')
-    # For each spatial reference,
-    for proj4Standard, srid in Session.execute('SELECT proj4text, srid FROM spatial_ref_sys'):
-        # Skip empty proj4s
-        if not proj4Standard.strip():
-            continue
-        # If we have a match,
-        if simplifyProj4(proj4Standard) == proj4Simplified:
-            return srid
-    # If we have no matches, raise exception
-    raise GeoRegistryError('Could not recognize proj4 spatial reference')
-
 def validateSRID(srid):
     'Make sure we have a valid SRID'
     if not srid:
