@@ -131,6 +131,7 @@ Install geospatial libraries
     unzip GTM_adm.zip
 
     cd $HOME/webapps/georegistry
+    paster make-config georegistry production.ini
     python2.7 utilities/loadRegions.py -c production.ini $HOME/dependencies
     paster serve --daemon production.ini
-    crontab utilities/crontab.crt
+    crontab deployment/crontab.crt
