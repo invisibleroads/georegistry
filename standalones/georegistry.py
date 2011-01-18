@@ -5,11 +5,9 @@ import urllib2
 import simplejson
 
 
-# baseURL = 'http://georegistry.org'
-baseURL = 'http://localhost:5000'
-
-
 # Core
+
+baseURL = 'http://georegistry.org'
 
 def updateFeatures(key, srid, featureCollection, tags, public=False):
     'Update features using the GeoRegistry web service'
