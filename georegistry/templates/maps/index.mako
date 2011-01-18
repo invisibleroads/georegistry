@@ -5,6 +5,12 @@
 <%def name="css()">
 #mapOL {position: absolute; top: 0; left: 0; width: 50%; height: 100%}
 #mapPO {position: absolute; top: 0; right: 0; width: 50%; height: 100%}
+#featuresPO {
+    fill: none;
+    stroke: black;
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+}
 </%def>
 
 <%def name="head()">
@@ -18,6 +24,7 @@ ${h.javascript_link('http://maps.google.com/maps/api/js?sensor=false')}
 </style>
 <script>
 var mapOL, layerOL;
+var mapPO, layerPO;
 </script>
 </%def>
 
@@ -33,7 +40,9 @@ personKey = person.key if person else ''
 
 
 // Make map using OpenLayers
-mapOL = new OpenLayers.Map('mapOL');
+mapOL = new OpenLayers.Map('mapOL', {
+    projection: new OpenLayers.Projection("EPSG:3857")
+});
 mapOL.addControl(new OpenLayers.Control.LayerSwitcher());
 mapOL.addLayers([
     new OpenLayers.Layer.Google("Google Physical", {type: google.maps.MapTypeId.TERRAIN}),
@@ -45,13 +54,12 @@ mapOL.setCenter((new OpenLayers.LonLat(-74.0059731, 40.7143528)).transform(new O
 
 
 // Make map using Polymaps
-var po = org.polymaps, mapPO, layerPO;
+var po = org.polymaps;
 mapPO = po.map()
     .container(document.getElementById('mapPO').appendChild(po.svg('svg')))
     .center({lat: 40.7143528, lon: -74.0059731})
     .zoom(0)
     .add(po.interact())
-    .add(po.compass())
     .add(po.image().url(po.url("http://{S}tile.cloudmade.com/8f066e8fa23c4e0abb89650a38555a58/20760/256/{Z}/{X}/{Y}.png").hosts(["a.", "b.", "c.", ""])));
 
 
@@ -73,11 +81,19 @@ function updateMaps() {
         protocol: new OpenLayers.Protocol.HTTP({
             url: "${h.url('map_view_', responseFormat='json')}",
             params: {
-                key: "${personKey}",
+                key: '${personKey}',
                 srid: 4326,
-                tags: tagText
+                tags: tagText,
+                bboxFormat: 'yxyx',
+                simplified: 1
             },
             format: new OpenLayers.Format.GeoJSON()
+        }),
+        styleMap: new OpenLayers.StyleMap({
+            fillColor: 'black',
+            strokeColor: 'black',
+            strokeWidth: 2,
+            pointRadius: 5
         })
     });
     mapOL.addLayer(layerOL);
@@ -88,7 +104,8 @@ function updateMaps() {
     if (layerPO) {
         mapPO.remove(layerPO);
     }
-    layerPO = po.geoJson().url("${h.url('map_view_', responseFormat='json')}?key=${personKey}&srid=4326&tags=" + tagText + "&bbox={B}");
+    layerPO = po.geoJson().url("${h.url('map_view_', responseFormat='json')}?key=${personKey}&srid=4326&tags=" + tagText + "&bboxFormat=xyxy&bbox={B}&simplified=1");
+    layerPO.id('featuresPO');
     mapPO.add(layerPO);
 }
 // Define controls

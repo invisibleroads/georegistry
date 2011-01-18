@@ -74,8 +74,9 @@ class TestMapsController(TestController):
         p = {
             'responseFormat': 'json',
             'key': self.person1Key,
-            'srid': 3857,
+            'srid': 4326,
             'tags': '\n'.join(self.tagTexts[:2]),
+            'bboxFormat': 'yxyx',
             'bbox': '',
             'simplified': 1,
         }
@@ -89,14 +90,20 @@ class TestMapsController(TestController):
         print 'Expect error if we submit invalid tags'
         self.app.get(url(urlName, **adjust(p, tags='')), status=400)
         self.app.get(url(urlName, **adjust(p, tags='x' * (parameter.TAG_LENGTH_MAXIMUM + 1))), status=400)
+        print 'Expect error if we submit invalid bboxFormat'
+        self.app.get(url(urlName, **adjust(p, bboxFormat='xxx')), status=400)
         print 'Expect error if we submit invalid bbox'
         self.app.get(url(urlName, **adjust(p, bbox='xxx')), status=400)
         print 'Expect error if we submit invalid simplified'
         self.app.get(url(urlName, **adjust(p, simplified='xxx')), status=400)
         print 'Check that a view request works properly'
         self.app.get(url(urlName, **p))
+        self.app.get(url(urlName, **adjust(p, srid=3857)))
+        self.app.get(url(urlName, **adjust(p, bbox='-900, -200, 900, 200')))
         self.app.get(url(urlName, **adjust(p, bbox='-180, -90, 180, 90')))
         self.app.get(url(urlName, **adjust(p, bbox='-180, -90, 180, 90', simplified=0)))
+        self.app.get(url(urlName, **adjust(p, bboxFormat='xyxy', bbox='-90, -180, 90, 180')))
+        self.app.get(url(urlName, **adjust(p, bboxFormat='xyxy', bbox='-90, -180, 90, 180', simplified=0)))
         print 'Check that caching works properly'
         def getCacheTimestamps():
             return [x[0] for x in Session.query(model.Map.when_updated).order_by(model.Map.when_updated)]

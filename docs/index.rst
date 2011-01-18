@@ -11,7 +11,7 @@ The GeoRegistry is a free web service for storing geospatial data.
     POST   /features (key=string, srid=integer, featureCollection=geojson, tags=strings, public=binary) --> featureIDs=integers
     DELETE /features (key=string, featureIDs=integers)
     GET    /tags.json (key=string) --> tags=strings
-    GET    /maps.json (key=string, srid=integer, tags=strings, bbox=reals, simplified=binary) --> featureCollection=geojson
+    GET    /maps.json (key=string, srid=integer, tags=strings, bboxFormat=string, bbox=reals, simplified=binary) --> featureCollection=geojson
 
 
 Update features
@@ -179,12 +179,13 @@ Render maps
 -----------
 Given desired tags and desired spatial reference srid, get visible geojson features.  
 
-- Optionally, specify a bounding box (minimum latitude, minimum longitude, maximum latitude, maximum longitude).
 - Set ``simplified=0`` to disable smart simplification.
+- Set ``bboxFormat=yxyx`` if you are using OpenLayers and ``bboxFormat=xyxy`` if you are using Polymaps.
+- Specify a bounding box ``bbox`` to limit your result set.
 - When reading a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
 ::
 
-    GET    /maps.json (key=string, srid=integer, tags=strings, bbox=reals, simplified=binary) --> featureCollection=geojson
+    GET    /maps.json (key=string, srid=integer, tags=strings, bboxFormat=string, bbox=reals, simplified=binary) --> featureCollection=geojson
 
 In jQuery, you can retrieve the raw geojson.
 ::
@@ -193,6 +194,7 @@ In jQuery, you can retrieve the raw geojson.
         key: YOUR_API_KEY,
         srid: 3857,
         tags: 'parties',
+        bboxFormat: 'yxyx',
         bbox: '-180, -90, 180, 90',
         simplified: 1
     }, function(data) {
@@ -206,6 +208,7 @@ In Python, you can retrieve the raw geojson.
         key=YOUR_API_KEY,
         srid=3857,
         tags=['flights'],
+        bboxFormat: 'yxyx',
         bbox='-180, -90, 180, 90',
         simplified=True,
     )
@@ -214,14 +217,16 @@ OpenLayers
 ::
 
     layerOL = new OpenLayers.Layer.Vector('Features', {
-        projection: new OpenLayers.Projection('EPSG:4326'),
+        projection: new OpenLayers.Projection('EPSG:3857'),
         strategies: [new OpenLayers.Strategy.BBOX()],
         protocol: new OpenLayers.Protocol.HTTP({
-            url: "http://georegistry.org/maps.json",
+            url: 'http://georegistry.org/maps.json',
             params: {
-                key: YOUR_API_KEY,
-                srid: 4326,
-                tags: 'flights\nparties'
+                key: '${personKey}',
+                srid: 3857,
+                tags: tagText,
+                bboxFormat: 'yxyx',
+                simplified: 1
             },
             format: new OpenLayers.Format.GeoJSON()
         })
@@ -229,3 +234,5 @@ OpenLayers
 
 Polymaps
 ::
+
+    layerPO = po.geoJson().url("http://georegistry.org/maps.json?key=${personKey}&srid=4326&tags=" + tagText + "&bboxFormat=xyxy&bbox={B}&simplified=1");

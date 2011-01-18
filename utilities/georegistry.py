@@ -47,7 +47,7 @@ def getTags(key):
     # Return
     return responseData.splitlines()
 
-def viewMaps(key, srid, tags, bbox=None, simplified=True):
+def viewMaps(key, srid, tags, simplified=True, bboxFormat='yxyx', bbox=None):
     'Assemble a map using the GeoRegistry web service'
     # Initialize
     url = baseURL + '/maps'
@@ -56,6 +56,7 @@ def viewMaps(key, srid, tags, bbox=None, simplified=True):
         'key': key,
         'srid': srid,
         'tags': '\n'.join(tags),
+        'bboxFormat': bboxFormat,
         'bbox': bbox if bbox else '',
         'simplified': 1 if simplified else 0,
     }, 'GET')
