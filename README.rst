@@ -132,6 +132,7 @@ Install geospatial libraries
 
     cd $HOME/webapps/georegistry
     paster make-config georegistry production.ini
+    paster setup-app production.ini
     python2.7 utilities/loadRegions.py -c production.ini $HOME/dependencies
     paster serve --daemon production.ini
     crontab deployment/crontab.crt
