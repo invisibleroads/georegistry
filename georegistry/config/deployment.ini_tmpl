@@ -28,8 +28,8 @@ beaker.session.secret = ${app_instance_secret}
 sqlalchemy.url = postgresql://georegistry:georegistry@localhost/georegistry
 # recaptcha.public =
 # recaptcha.private =
-sms.imap_email = 
-sms.imap_server = 
+sms.email = support@example.com
+sms.imap_server = localhost
 # sms.imap_username = 
 # sms.imap_password = 
 
