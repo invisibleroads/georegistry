@@ -31,6 +31,7 @@ $(document).ready(function() {
 ${self.navigation()}
 <%
 linkPacks = [
+    ('Documents', h.url('/docs')),
     ('People', h.url('person_index')),
 ]
 if h.isPerson():
