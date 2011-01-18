@@ -96,6 +96,13 @@ Install geospatial libraries
     export PYTHONPATH=$HOME/lib/python2.7
     export LD_LIBRARY_PATH=$HOME/lib
 
+    wget ftp://ftp.postgresql.org/pub/source/v9.0.2/postgresql-9.0.2.tar.gz
+    tar xzvf postgresql-9.0.2.tar.gz
+    pushd postgresql-9.0.2.tar.gz
+    ./configure --prefix=$HOME
+    make install
+    popd
+
     wget http://download.osgeo.org/proj/proj-4.7.0.tar.gz
     wget http://download.osgeo.org/proj/proj-datumgrid-1.5.zip
     tar xzvf proj-4.7.0.tar.gz
