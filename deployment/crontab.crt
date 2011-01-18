@@ -1,0 +1,4 @@
+# Start server every twenty minutes
+15,35,55 * * * * export LD_LIBRARY_PATH=/home/${WEBFACTION-USER}/lib;cd /home/${WEBFACTION-USER}/webapps/georegistry;/home/${WEBFACTION-USER}/bin/paster serve --daemon production.ini
+# Check and send text messages every fifteen minutes
+10,25,40,55 * * * * export LD_LIBRARY_PATH=/home/${WEBFACTION-USER}/lib;cd /home/${WEBFACTION-USER}/webapps/georegistry;/usr/bin/env python2.7 utilities/sms.py -c production.ini >> mail.log 2>&1
