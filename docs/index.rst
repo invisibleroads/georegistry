@@ -6,6 +6,7 @@ The GeoRegistry is a free web service for storing geospatial data.
 - Elements of the ``tags`` argument are separated by newlines.
 - Elements of the ``featureIDs`` argument are separated by newlines.
 - When reading or writing a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
+
 ::
 
     POST   /features (key=string, srid=integer, featureCollection=geojson, tags=strings, public=binary) --> featureIDs=integers
@@ -21,6 +22,7 @@ Given a geojson featureCollection, string tags and spatial reference srid, save 
 - Set ``public=1`` to make the features publicly visible.  
 - Specify ``id`` in a geojson feature to overwrite an existing feature.  Edit access is restricted to the API key that originally created the feature.
 - When writing a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
+
 ::
 
     POST   /features (key=string, srid=integer, featureCollection=geojson, tags=strings, public=binary) --> featureIDs=integers
@@ -183,6 +185,7 @@ Given desired tags and desired spatial reference srid, get visible geojson featu
 - Set ``bboxFormat=yxyx`` if you are using OpenLayers and ``bboxFormat=xyxy`` if you are using Polymaps.
 - Specify a bounding box ``bbox`` to limit your result set.
 - When reading a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
+
 ::
 
     GET    /maps.json (key=string, srid=integer, tags=strings, bboxFormat=string, bbox=reals, simplified=binary) --> featureCollection=geojson
