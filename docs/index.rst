@@ -3,8 +3,7 @@ GeoRegistry API
 `GeoRegistry.org <http://georegistry.org>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.
 
 - The ``key`` argument is an API key assigned on registration and visible on your account page.  If unspecified, only public features are visible.
-- Elements of the ``tags`` argument are separated by newlines.
-- Elements of the ``featureIDs`` argument are separated by newlines.
+- The ``tags`` and ``featureIDs`` arguments are strings or integers separated by newlines.
 - When reading or writing a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
 
 ::
@@ -13,6 +12,14 @@ GeoRegistry API
     DELETE /features (key=string, featureIDs=integers)
     GET    /tags.json (key=string) --> tags=strings
     GET    /maps.json (key=string, srid=integer, tags=strings, bboxFormat=string, bbox=reals, simplified=binary) --> featureCollection=geojson
+
+Python developers can use `georegistry.py <https://github.com/invisibleroads/georegistry/blob/master/deployment/georegistry.py>`_ to access the web service.  The ``tags`` and ``featureIDs`` arguments are lists.
+::
+
+    georegistry.updateFeatures(key, srid, featureCollection, tags, public) --> featureIDs
+    georegistry.deleteFeatures(key, featureIDs)
+    georegistry.getTags(key) --> tags
+    georegistry.viewMaps(key, srid, tags, simplified, bboxFormat, bbox) --> featureCollection
 
 
 Update features
