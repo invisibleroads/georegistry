@@ -2,7 +2,7 @@ GeoRegistry API
 ===============
 `GeoRegistry.org <http://georegistry.org>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.
 
-- The ``key`` argument is an API key assigned on registration and visible on your account page.  If unspecified, only public features are visible.
+- The ``key`` argument is an API key assigned at `registration <http://georegistry.org/people/register>`_ and visible in your `account <http://georegistry.org/people/update>`_.  If unspecified, only public features are visible.
 - The ``tags`` and ``featureIDs`` arguments are strings or integers separated by newlines.
 - When reading or writing a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
 

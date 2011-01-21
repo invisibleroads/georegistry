@@ -1,7 +1,7 @@
 'IMAP mailbox wrapper'
 # Import system modules
 import os; basePath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import logging; logging.basicConfig(filename=os.path.join(basePath, 'logs/mail.log'), level=logging.DEBUG)
+import logging; logging.basicConfig(filename=os.path.join(basePath, 'mail.log'), level=logging.DEBUG)
 import imaplib
 import email
 import email.Utils

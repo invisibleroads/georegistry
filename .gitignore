@@ -2,3 +2,5 @@ data
 production.ini
 *.pyc
 *.swp
+docs/_build
+georegistry/public/docs/*
