@@ -45,5 +45,5 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         .add(po.interact())
         .add(po.image().url(po.url('http://{S}tile.cloudmade.com/8f066e8fa23c4e0abb89650a38555a58/20760/256/{Z}/{X}/{Y}.png').hosts(['a.', 'b.', 'c.', ''])))
         .add(po.compass().pan('none'));
-    map.container().setAttribute('class', 'BuGn');
+    map.container().setAttribute('class', 'Spectral');
 </%def>
