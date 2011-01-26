@@ -19,14 +19,12 @@ from georegistry.lib.base import BaseController, render
 
 class MapsController(BaseController):
 
-    def view(self, responseFormat='html'):
+    def view(self, responseFormat='json'):
         'Assemble a map'
         # Get responseFormat
         responseFormat = responseFormat.lower()
-        if responseFormat not in ['json', 'html']:
-            abort(400, 'Must specify a valid responseFormat: json, html')
-        if responseFormat == 'html':
-            return render('/maps/index.mako')
+        if responseFormat not in ['json']:
+            abort(400, 'Must specify a valid responseFormat: json')
         # Authenticate via personID or key
         personID = h.getPersonIDViaKey()
         # Load srid

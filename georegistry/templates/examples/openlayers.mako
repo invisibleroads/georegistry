@@ -1,6 +1,6 @@
 <%inherit file="/examples/base.mako"/>
 
-<%def name="title()">Openlayers Plain</%def>
+<%def name="title()">Openlayers</%def>
 
 <%def name="head()">
 <link href='/files/openlayers/theme/default/style.css' media='screen' rel='stylesheet' type='text/css' /> 
@@ -12,11 +12,7 @@
 <%def name="js()">
     function renderMaps() {
         // Load
-        var tags = [];
-        $('.tag:checked').each(function() {
-            tags.push(this.value);
-        });
-        var tagString = tags.join('\n');
+        var tagString = getSelectedTags();
         // Clean
         if (layer) {
             map.removeLayer(layer);
@@ -30,6 +26,7 @@
             protocol: new OpenLayers.Protocol.HTTP({
                 url: '/maps.json',
                 params: {
+                    key: $('#key').val(),
                     srid: 4326,
                     tags: tagString,
                     bboxFormat: 'yxyx',
@@ -55,7 +52,7 @@
     }, {
         context: {
             getColor: function(feature) {
-                return colors[getNumber(feature.id) % colors.length];
+                return colors[getNumber(feature.fid) % colors.length];
             }
         }
     }));
@@ -74,6 +71,8 @@
     ]);
     map.setCenter((new OpenLayers.LonLat(-74.0059731, 40.7143528)).transform(new OpenLayers.Projection('EPSG:4326'), map.getProjectionObject()), 0);
     map.events.register('zoomend', null, function() {
-        layer.refresh({force: true});
+        if (layer) {
+            layer.refresh({force: true});
+        }
     });
 </%def>

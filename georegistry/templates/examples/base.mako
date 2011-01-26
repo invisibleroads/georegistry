@@ -12,8 +12,8 @@ ${self.head()}
 
 <style> 
     a {text-decoration: none}
-    #navigation {position: fixed; top: 0; left: 0; width: 20em; height: 7em; overflow: auto}
-    #toolbar {position: fixed; top: 7em; left: 0; width: 20em; bottom: 0; overflow: auto}
+    #navigation {position: fixed; top: 0; left: 0; width: 20em; height: 8em; overflow: auto}
+    #toolbar {position: fixed; top: 8em; left: 0; width: 20em; bottom: 0; overflow: auto}
     #map {position: fixed; top: 0; right: 0; left: 20em; height: 100%}
     .normalFONT {font-family: Helvetica, Arial, sans-serif}
     .linkOFF {color: darkblue; background-color: white}
@@ -63,7 +63,7 @@ $(document).ready(function() {
     // Prepare page
     refreshInterface();
     $('#refresh').click(refreshInterface);
-    $('#key').focus();
+    $('#key').click(function() {this.select()}).focus();
 });
 </script> 
 </head> 
@@ -84,6 +84,15 @@ personKey = person.key if person else ''
     <br>
     <a class=linkOFF href='${h.url("/docs")}'>See Documentation</a><br>
     <a class=linkOFF href='${h.url("person_register")}'>Get API Key</a><br>
+% if not h.isPerson():
+% if not request.path.startswith('/people/login'):
+    <a class=linkOFF href="${h.url('person_login', url=request.path)}">Login</a>
+% endif
+% else:
+    <a class=linkOFF href="${h.url('person_logout', url=request.path)}">Logout</a>
+    &mdash;
+    <a class=linkOFF href="${h.url('person_update')}">${session['nickname']}</a>
+% endif
 </div> 
 
 <div id=toolbar></div> 
@@ -93,6 +102,6 @@ ${next.body()}
 </body> 
 </html>
 <%def name='title()'></%def>
-<%def name='css()'></%def>
 <%def name='head()'></%def>
+<%def name='css()'></%def>
 <%def name='js()'></%def>
