@@ -38,7 +38,7 @@ def run(shapePath):
     areaCount = 0
     # Make tags
     tagTexts = [
-        countryName + (u': Administrative Level %s' % administrativeLevel if administrativeLevel > 0 else ''),
+        countryName + (u' Administrative Level %s' % administrativeLevel if administrativeLevel > 0 else ''),
     ]
     if administrativeLevel == 0:
         tagTexts.append(u'* countries')

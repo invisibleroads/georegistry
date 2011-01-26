@@ -13,12 +13,14 @@
     function renderMaps() {
         // Load
         var tagString = getSelectedTags();
-        // Clean
-        if (layer) {
-            map.removeLayer(layer);
-            layer.destroy();
-        }
-        if (!tagString) return;
+        if (!tagString) {
+            if (layer) {
+                layer.destroy();
+                layer = undefined;
+                $('#list').html('');
+            }
+            return;
+        };
         // Update
         layer = new OpenLayers.Layer.Vector('Features', {
             projection: new OpenLayers.Projection('EPSG:4326'),
@@ -35,6 +37,16 @@
                 format: new OpenLayers.Format.GeoJSON()
             }),
             styleMap: rainbowStyle
+        });
+        // !!!
+        layer.events.register('beforefeaturesadded', null, function(data) {
+            console.log(data);
+            // var items;
+            // $(data.features).each(function() {
+                // var feature = this;
+                // items.push('<div class="linkOFF feature" id=f' + feature.fid + '>' + + '</div>');
+            // });
+            // $('#list').html(items.join('\n'));
         });
         map.addLayer(layer);
         layer.refresh();

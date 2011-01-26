@@ -1,3 +1,4 @@
+#!/bin/bash
 pushd docs
 rm -Rf _build
 make html

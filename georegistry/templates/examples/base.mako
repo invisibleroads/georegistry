@@ -13,7 +13,9 @@ ${self.head()}
 <style> 
     a {text-decoration: none}
     #navigation {position: fixed; top: 0; left: 0; width: 20em; height: 8em; overflow: auto}
-    #toolbar {position: fixed; top: 8em; left: 0; width: 20em; bottom: 0; overflow: auto}
+    #toolbar {position: fixed; top: 8em; left: 0; width: 20em; height: 10em; overflow: auto}
+    #list {position: fixed; top: 20em; left: 0; width: 20em; bottom: 0; overflow: auto}
+    #detail {position: fixed; top: 20em; left: 0; width: 20em; bottom: 0; overflow: auto; display: none}
     #map {position: fixed; top: 0; right: 0; left: 20em; height: 100%}
     .normalFONT {font-family: Helvetica, Arial, sans-serif}
     .linkOFF {color: darkblue; background-color: white}
@@ -46,7 +48,9 @@ $(document).ready(function() {
         }, function(data) {
             var targetDiv = $('#toolbar');
             $(data.split('\n')).each(function() {
-                targetDiv.append('<input type=checkbox class=tag value="' + this + '">' + this + '<br>');
+                var tag = $.trim(this);
+                if (!tag) return;
+                targetDiv.append('<input type=checkbox class=tag value="' + tag + '">' + tag + '<br>');
             });
             $('.tag').change(renderMaps);
         });
@@ -97,6 +101,8 @@ personKey = person.key if person else ''
 
 <div id=toolbar></div> 
 <div id=map></div> 
+<div id=list></div>
+<div id=detail></div>
 ${next.body()}
 
 </body> 
