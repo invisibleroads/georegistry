@@ -4,3 +4,6 @@ production.ini
 *.swp
 docs/_build
 georegistry/public/docs/*
+paster.log
+paster.pid
+mail.log
