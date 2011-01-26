@@ -2,9 +2,14 @@ GeoRegistry API
 ===============
 `GeoRegistry.org <http://georegistry.org>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.
 
-- The ``key`` argument is an API key assigned at `registration <http://georegistry.org/people/register>`_ and visible in your `account <http://georegistry.org/people/update>`_.  If unspecified, only public features are visible.
-- The ``tags`` and ``featureIDs`` arguments are strings or integers separated by newlines.
-- When reading or writing a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
+Examples
+--------
+- `See an example GeoRegistry client using Polymaps (will not work in Internet Explorer) <http://georegistry.org/examples/openlayers>`_.
+- `See an example GeoRegistry client using OpenLayers <http://georegistry.org/examples/openlayers>`_.
+
+Reference
+---------
+The ``key`` argument is an API key assigned at `registration <http://georegistry.org/people/register>`_ and visible in your `account <http://georegistry.org/people/update>`_.  The ``tags`` and ``featureIDs`` arguments are strings or integers separated by newlines.
 
 ::
 
@@ -13,7 +18,7 @@ GeoRegistry API
     GET    /tags.json (key=string) --> tags=strings
     GET    /maps.json (key=string, srid=integer, tags=strings, bboxFormat=string, bbox=reals, simplified=binary) --> featureCollection=geojson
 
-Python developers can use `georegistry.py <https://github.com/invisibleroads/georegistry/blob/master/deployment/georegistry.py>`_ to access the web service.  The ``tags`` and ``featureIDs`` arguments are lists.
+Python developers can use `georegistry.py <https://github.com/invisibleroads/georegistry/blob/master/deployment/georegistry.py>`_ to access the web service.  The ``tags`` and ``featureIDs`` arguments are lists. 
 ::
 
     georegistry.updateFeatures(key, srid, featureCollection, tags, public) --> featureIDs
@@ -21,14 +26,12 @@ Python developers can use `georegistry.py <https://github.com/invisibleroads/geo
     georegistry.getTags(key) --> tags
     georegistry.viewMaps(key, srid, tags, simplified, bboxFormat, bbox) --> featureCollection
 
+When reading a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the x-coordinate and latitude is the y-coordinate.
+
 
 Update features
----------------
-Given a geojson featureCollection, string tags and spatial reference srid, save each feature with the given properties and tags.  
-
-- Set ``public=1`` to make the features publicly visible.  
-- Specify ``id`` in a geojson feature to overwrite an existing feature.  Edit access is restricted to the API key that originally created the feature.
-- When writing a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
+^^^^^^^^^^^^^^^
+Given a geojson featureCollection, string tags and spatial reference srid, save each feature with the given properties and tags.  Set ``public=1`` to make the features publicly visible.  Specify the database-assigned ``id`` in a geojson feature to overwrite an existing feature; edit access is restricted to the API key that originally created the feature.
 
 ::
 
@@ -137,7 +140,7 @@ In Python, multiple tags should be entered as a list.
 
 
 Delete features
----------------
+^^^^^^^^^^^^^^^
 Given a list of featureIDs, delete corresponding features.  Delete access is restricted to the API key that originally created the feature.
 ::
 
@@ -161,7 +164,7 @@ In Python, multiple featureIDs should be entered as a list.
 
 
 Get tags
---------
+^^^^^^^^
 Return tags with visible features.
 ::
 
@@ -185,14 +188,8 @@ In Python, multiple tags will be a list.
 
 
 Render maps
------------
-Given desired tags and desired spatial reference srid, get visible geojson features.  
-
-- Set ``simplified=0`` to disable smart simplification.
-- Set ``bboxFormat=yxyx`` if you are using OpenLayers and ``bboxFormat=xyxy`` if you are using Polymaps.
-- Specify a bounding box ``bbox`` to limit your result set.
-- When reading a geojson FeatureCollection in the latitude and longitude spatial reference, note that longitude is the **x** coordinate and latitude is the **y** coordinate.
-
+^^^^^^^^^^^
+Given desired tags and desired spatial reference srid, get visible geojson features.  Set ``simplified=0`` to disable smart simplification.  Set ``bboxFormat=yxyx`` if you are using OpenLayers and ``bboxFormat=xyxy`` if you are using Polymaps.  Specify a bounding box ``bbox`` to limit your result set.
 ::
 
     GET    /maps.json (key=string, srid=integer, tags=strings, bboxFormat=string, bbox=reals, simplified=binary) --> featureCollection=geojson
@@ -223,18 +220,18 @@ In Python, you can retrieve the raw geojson.
         simplified=True,
     )
 
-OpenLayers
+Here is how you can load GeoRegistry data using OpenLayers.
 ::
 
-    layerOL = new OpenLayers.Layer.Vector('Features', {
-        projection: new OpenLayers.Projection('EPSG:3857'),
+    layer = new OpenLayers.Layer.Vector('Features', {
+        projection: new OpenLayers.Projection('EPSG:4326'),
         strategies: [new OpenLayers.Strategy.BBOX()],
         protocol: new OpenLayers.Protocol.HTTP({
             url: 'http://georegistry.org/maps.json',
             params: {
                 key: '${personKey}',
-                srid: 3857,
-                tags: tagText,
+                srid: 4326,
+                tags: tagString,
                 bboxFormat: 'yxyx',
                 simplified: 1
             },
@@ -242,7 +239,7 @@ OpenLayers
         })
     });
 
-Polymaps
+Here is how you can load GeoRegistry data using Polymaps.
 ::
 
-    layerPO = po.geoJson().url("http://georegistry.org/maps.json?key=${personKey}&srid=4326&tags=" + tagText + "&bboxFormat=xyxy&bbox={B}&simplified=1");
+    layer = po.geoJson().url("http://georegistry.org/maps.json?key=${personKey}&srid=4326&tags=" + escape(tagString) + "&bboxFormat=xyxy&bbox={B}&simplified=1");
