@@ -4,8 +4,8 @@ GeoRegistry API
 
 Examples
 --------
-- `See an example GeoRegistry client using Polymaps (will not work in Internet Explorer) <http://georegistry.org/examples/openlayers>`_.
-- `See an example GeoRegistry client using OpenLayers <http://georegistry.org/examples/openlayers>`_.
+- `See an example GeoRegistry client using Polymaps (will not work in Internet Explorer) <http://georegistry.org/examples/openlayers>`_
+- `See an example GeoRegistry client using OpenLayers <http://georegistry.org/examples/openlayers>`_
 
 Reference
 ---------
