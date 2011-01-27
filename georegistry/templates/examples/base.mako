@@ -37,7 +37,7 @@ $(document).ready(function() {
     );
     function getNumber(x) {return /\d+/.exec(x)[0]}
     function getID(obj) {return getNumber(obj.id)}
-    
+
     // Define functions
     function refreshInterface() {
         loadTags();
