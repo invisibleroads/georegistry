@@ -21,6 +21,11 @@ from georegistry.lib import store, geometry_store
 from georegistry.model import Session
 
 
+# Patterns
+
+pattern_number = re.compile(r'(\d+)')
+
+
 # Core
 
 def run(shapePath):
@@ -51,6 +56,11 @@ def run(shapePath):
             if fieldType == osgeo.ogr.OFTString and fieldValue:
                 fieldValue = fieldValue.decode('latin-1')
             featureProperties[fieldName] = fieldValue
+        if administrativeLevel > 0:
+            featureName = featureProperties['NAME_%s' % administrativeLevel]
+        else:
+            featureName = featureProperties['NAME_ENGLI']
+        featureProperties['name'] = featureName
         # Make feature
         feature = model.Feature()
         feature.owner_id = personID

@@ -13,9 +13,10 @@ ${self.head()}
 <style> 
     a {text-decoration: none}
     #navigation {position: fixed; top: 0; left: 0; width: 20em; height: 8em; overflow: auto}
-    #toolbar {position: fixed; top: 8em; left: 0; width: 20em; height: 10em; overflow: auto}
-    #list {position: fixed; top: 20em; left: 0; width: 20em; bottom: 0; overflow: auto}
-    #detail {position: fixed; top: 20em; left: 0; width: 20em; bottom: 0; overflow: auto; display: none}
+    #toolbar {position: fixed; top: 8em; left: 0; width: 20em; height: 8em; overflow: auto; background-color: #eeeeee}
+    #list {position: fixed; top: 16em; left: 0; width: 20em; height: 8em; overflow: auto; background-color: #dddddd}
+    #detail {position: fixed; top: 24em; left: 0; width: 20em; bottom: 0; overflow: auto; background-color: #cccccc}
+    #detailHeader {font-size: x-large; font-weight: bold}
     #map {position: fixed; top: 0; right: 0; left: 20em; height: 100%}
     .normalFONT {font-family: Helvetica, Arial, sans-serif}
     .linkOFF {color: darkblue; background-color: white}
