@@ -9,12 +9,6 @@
 <script src='http://maps.google.com/maps/api/js?sensor=false' type='text/javascript'></script> 
 </%def>
 
-<%def name="css()">
-.fNormal {background-color: #dddddd} 
-.fHover {background-color: #ff9900}
-.fSelect {background-color: #ffff00}
-</%def>
-
 <%def name="js()">
     function renderMaps() {
         // Load
@@ -45,21 +39,22 @@
             styleMap: rainbowStyle
         });
         layer.events.register('featuresadded', null, function(data) {
-            var items = [], listLines = [];
+            // Initialize
+            var items = [];
+            // For each feature,
             $(data.features).each(function() {
+                // Push
                 items.push({
-                    fid: this.fid,
+                    featureID: this.fid,
                     name: this.attributes.name
                 });
             });
-            items.sort(function(a, b) {
-                var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
-                if (nameA < nameB) return -1;
-                else if (nameA > nameB) return 1;
-                else return 0;
-            });
+            // Sort
+            items.sort(compareFeatureByName);
+            // Display
+            var listLines = [];
             $(items).each(function() {
-                listLines.push('<div class="fNormal feature" id=f' + this.fid + '>' + this.name + '</div>');
+                listLines.push('<div class="fNormal feature" id=f' + this.featureID + '>' + this.name + '</div>');
             });
             $('#list').html(listLines.join('\n'));
             $('#list .feature').hover(

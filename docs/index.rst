@@ -4,8 +4,8 @@ GeoRegistry API
 
 Examples
 --------
-- `Polymaps example <http://georegistry.org/examples/polymaps>`_ (will not work in Internet Explorer)
-- `OpenLayers example <http://georegistry.org/examples/openlayers>`_
+- `Polymaps example <http://georegistry.org/examples/polymaps>`_ (will not work in Internet Explorer).  Thanks to Mike Bostock for his `SVG event handling example <https://github.com/simplegeo/polymaps/blob/master/examples/tipsy/tipsy.html>`_.
+- `OpenLayers example <http://georegistry.org/examples/openlayers>`_.  Thanks to Andy Doro for figuring out `how to style features <http://docs.openlayers.org/library/feature_styling.html>`_.
 
 Reference
 ---------
