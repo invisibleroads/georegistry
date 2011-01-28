@@ -34,8 +34,12 @@ def make_map(config):
     # Map maps
     map.connect('map_view', '/maps', controller='maps', action='view')
     map.connect('map_view_', '/maps.{responseFormat}', controller='maps', action='view')
+    # Map examples
+    map.redirect('/examples', '/docs')
+    map.connect('/examples/polymaps', controller='examples', action='polymaps')
+    map.connect('/examples/openlayers', controller='examples', action='openlayers')
     # Redirect index
-    map.redirect('/', '/maps')
+    map.redirect('/', '/docs')
     # Return
     return map
 

@@ -7,7 +7,7 @@ except ImportError:
 
 setup(
     name='georegistry',
-    version='0.2',
+    version='0.3',
     description='Web service for centralizing geospatial data across applications',
     author='Roy Hyunjin Han',
     author_email='service@invisibleroads.com',
