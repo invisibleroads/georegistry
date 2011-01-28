@@ -81,6 +81,10 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
                     featurePackByID[featureID].element.setAttribute(getColorClass(featureID));
                 }
             ).click(function() {
+                // Change map color
+                var featureID = getID(this);
+                featurePackByID[featureID].element.setAttribute('fS');
+
                 var fSedNew = layer.getFeatureByFid(getID(this));
                 if (fSedOld != fSedNew) {
                     selectControl.unselectAll();
