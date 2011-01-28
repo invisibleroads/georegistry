@@ -143,7 +143,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         };
     }
     function getColorClass(featureID) {
-        return 'q' + (9 - (featureID % 9)) + '-' + 9;
+        return 'q' + (8 - (featureID % 9)) + '-' + 9;
     }
     function setFeatureColor(featureID, colorClass) {
         $(elementsByID[featureID]).each(function() {
