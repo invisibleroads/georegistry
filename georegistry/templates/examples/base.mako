@@ -21,9 +21,11 @@ ${self.head()}
     .normalFONT {font-family: Helvetica, Arial, sans-serif}
     .linkOFF {color: darkblue; background-color: white}
     .linkON {color: white; background-color: darkblue}
-    .fN {background-color: #dddddd}
-    .fH {background-color: #ff9900}
-    .fS {background-color: #ffff00}
+    .bN {background-color: #dddddd}
+    .bH {background-color: #ff9900}
+    .fH {fill: #ff9900}
+    .bS {background-color: #ffff00}
+    .fS {fill: #ffff00}
     ${self.css()}
 </style> 
 

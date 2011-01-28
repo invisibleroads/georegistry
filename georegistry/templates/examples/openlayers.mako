@@ -65,24 +65,24 @@
             $('#list .feature').hover(
                 function () {
                     // Change div color
-                    this.className = this.className.replace('fN', 'fH');
+                    this.className = this.className.replace('bN', 'bH');
                     // Change map color
-                    listScroll = 0;
+                    scrollList = 0;
                     hoverControl.overFeature(layer.getFeatureByFid(getID(this)));
                 }, 
                 function () {
                     // Change div color
-                    this.className = this.className.replace('fH', 'fN');
+                    this.className = this.className.replace('bH', 'bN');
                     // Change map color
                     hoverControl.outFeature(layer.getFeatureByFid(getID(this)));
-                    listScroll = 1;
+                    scrollList = 1;
                 }
             ).click(function() {
-                var featureSelectedNew = layer.getFeatureByFid(getID(this));
-                if (featureSelectedOld.fid != featureSelectedNew.fid) {
+                var featureID = getID(this), feature = layer.getFeatureByFid(featureID);
+                if (selectedID != featureID) {
                     selectControl.unselectAll();
-                    selectControl.select(featureSelectedNew);
-                    featureSelectedOld = featureSelectedNew;
+                    selectControl.select(feature);
+                    selectedID = featureID;
                 }
             });
         });
@@ -121,14 +121,20 @@
         map.addControl(selectControl);
         selectControl.activate();
     }
-    var listHover, listScroll = 1;
+    var hoveredID, scrollList = 1;
     function hoverFeature(feature) {
-        if (listHover) {
-            listHover.attr('className', listHover.attr('className').replace('fH', 'fN'));
+        if (hoveredID && hoveredID != feature.fid) {
+            // Restore list entry
+            listHover = $('#d' + hoveredID);
+            if (listHover) listHover.removeClass('bH bS').addClass('bN');
         }
-        listHover = $('#d' + feature.fid);
-        listHover.attr('className', listHover.attr('className').replace('fN', 'fH'));
-        if (listScroll) {
+        // Set
+        hoveredID = feature.fid;
+        // Highlight list entry
+        listHover = $('#d' + hoveredID);
+        listHover.removeClass('bN bS').addClass('bH');
+        if (scrollList) {
+            // Scroll list
             var list = $('#list');
             list.scrollTop(list.scrollTop() + listHover.position().top - list.height() / 2);
         }
@@ -136,7 +142,7 @@
     function selectFeature(feature) {
         // Change style for corresponding list div
         var listSelect = $('#d' + feature.fid);
-        listSelect.attr('className', listSelect.attr('className').replace('fH', 'fS'));
+        listSelect.removeClass('bN bH').addClass('bS');
         // Set feature detail
         var attributeByName = feature.attributes, attributeLines = [];
         for (key in attributeByName) {
@@ -147,12 +153,12 @@
     }
     function unselectFeature(feature) {
         // Clear
-        featureSelectedOld = undefined;
+        selectedID = undefined;
         // Clear feature detail
         $('#detail').html('');
         // Change style for corresponding list div
         var listSelect = $('#d' + feature.fid);
-        listSelect.attr('className', listSelect.attr('className').replace('fS', 'fN'));
+        listSelect.removeClass('bH bS').addClass('bN');
     }
 
     <%text>
@@ -206,10 +212,10 @@
             layer.refresh({force: true});
         }
     });
-    var featureSelectedOld;
+    var selectedID;
     $('#detail').hover(
         function() {
-            if (featureSelectedOld) {
+            if (selectedID) {
                 $(this).css('background-color', '#b2b2b2');
             }
         },
@@ -217,8 +223,11 @@
             $(this).css('background-color', '#cccccc');
         }
     ).click(function() {
-        if (featureSelectedOld && featureSelectedOld.geometry) {
-            map.zoomToExtent(featureSelectedOld.geometry.getBounds().scale(1.2));
+        if (selectedID) {
+            var feature = layer.getFeatureByFid(selectedID);
+            if (feature && feature.geometry) {
+                map.zoomToExtent(feature.geometry.getBounds().scale(1.2));
+            }
         }
     });
 </%def>
