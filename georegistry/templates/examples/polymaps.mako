@@ -1,4 +1,3 @@
-
 <%inherit file='/examples/base.mako'/>
 
 <%def name='title()'>Polymaps</%def>
@@ -20,7 +19,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
 </%def>
 
 <%def name='js()'>
-    var featurePackByID = {};
+    var propertyByNameByID = {}, elementsByID = {}, geometriesByID = {};
     function renderMaps() {
         // Load
         var tagString = getSelectedTags();
@@ -30,32 +29,41 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         layer = po.geoJson().url('${h.url("map_view_", responseFormat="json")}?key=' + $('#key').val() + '&srid=4326&tags=' + escape(tagString) + "&bboxFormat=xyxy&bbox={B}&simplified=1").on('load', function(e) {
             // For each feature,
             $(e.features).each(function() {
-                // Store
-                featurePackByID[this.data.id] = this;
+                // Load
+                var featureID = this.data.id;
+                // Store propertyByName
+                propertyByNameByID[featureID] = this.data.properties;
+                // Store element
+                if (!elementsByID[featureID]) elementsByID[featureID] = []
+                elementsByID[featureID].push(this.element);
+                // Store geometry
+                if (!geometriesByID[featureID]) geometriesByID[featureID] = []
+                geometriesByID[featureID].push(this.data.geometry);
                 // Set hover listener
-                this.element.addEventListener('mouseover', getHoverFeature(this), false);
-                this.element.addEventListener('mouseout', getUnhoverFeature(this), false);
+                this.element.addEventListener('mouseover', getHoverFeature(featureID), false);
+                this.element.addEventListener('mouseout', getUnhoverFeature(featureID), false);
                 // Set click listener
-                this.element.addEventListener('click', getSelectFeature(this), false);
+                this.element.addEventListener('click', getSelectFeature(featureID), false);
                 // Set color class
-                this.element.setAttribute('class', getColorClass(this.data.id));
+                this.element.setAttribute('class', getColorClass(featureID));
                 // Set id
-                this.element.setAttribute('id', 'e' + this.data.id);
+                this.element.setAttribute('id', 'e' + featureID);
             });
             // Initialize
             var items = [];
             // For each stored feature,
-            for (featureID in featurePackByID) {
+            for (featureID in propertyByNameByID) {
                 // If the feature is visible,
                 if ($('#e' + featureID).length) {
+                    propertyByName = propertyByNameByID[featureID];
                     items.push({
                         featureID: featureID,
-                        name: featurePackByID[featureID].data.properties.name || featureID + ''
+                        name: propertyByName.name || featureID + ''
                     });
                 } 
                 // If the feature is not visible,
                 else {
-                    delete featurePackByID[featureID];
+                    delete propertyByNameByID[featureID];
                 }
             }
             // Sort
@@ -69,16 +77,16 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
             $('#list .feature').hover(
                 function () {
                     scrollList = 0;
-                    getHoverFeature(featurePackByID[getID(this)])();
+                    getHoverFeature(getID(this))();
                     scrollList = 1;
                 }, 
                 function () {
                     scrollList = 0;
-                    getUnhoverFeature(featurePackByID[getID(this)])();
+                    getUnhoverFeature(getID(this))();
                     scrollList = 1;
                 }
             ).click(function() {
-                getSelectFeature(featurePackByID[getID(this)])();
+                getSelectFeature(getID(this))();
             });
         });
         map.add(layer);
@@ -86,10 +94,8 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
 
     // Define factories
     var scrollList = 1;
-    function getHoverFeature(featurePack) {
+    function getHoverFeature(featureID) {
         return function(e) {
-            // Load
-            featureID = featurePack.data.id;
             // Highlight list entry
             var listHover = $('#d' + featureID);
             listHover.removeClass('bN bS').addClass('bH');
@@ -99,39 +105,36 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
                 list.scrollTop(list.scrollTop() + listHover.position().top - list.height() / 2);
             }
             // Highlight map entry
-            featurePack.element.setAttribute('class', 'fH');
+            setFeatureColor(featureID, 'fH');
         };
     }
-    function getUnhoverFeature(featurePack) {
+    function getUnhoverFeature(featureID) {
         return function(e) {
-            // Load
-            var featureID = featurePack.data.id;
             // Restore list entry
             var listHover = $('#d' + featureID);
             listHover.removeClass('bH bS').addClass('bN');
             // Restore map entry
-            featurePack.element.setAttribute('class', getColorClass(featureID));
+            setFeatureColor(featureID, getColorClass(featureID));
         }
     }
-    function getSelectFeature(featurePack) {
+    function getSelectFeature(featureID) {
         return function(e) {
-            if (selectedID && selectedID != featurePack.data.id) {
+            if (selectedID && selectedID != featureID) {
                 // Restore list entry
                 var listSelect = $('#d' + selectedID);
                 if (listSelect) listSelect.removeClass('bH bS').addClass('bN');
                 // Restore map entry
-                var fP = featurePackByID[selectedID];
-                if (fP) fP.element.setAttribute('class', getColorClass(selectedID));
+                setFeatureColor(selectedID, getColorClass(selectedID));
             }
             // Load
-            selectedID = featurePack.data.id;
+            selectedID = featureID;
             // Highlight list entry
             var listSelect = $('#d' + selectedID);
             listSelect.removeClass('bN bH').addClass('bS');
             // Highlight map entry
-            featurePack.element.setAttribute('class', 'fS');
+            setFeatureColor(selectedID, 'fS');
             // Set feature detail
-            var propertyByName = featurePack.data.properties, propertyLines = [];
+            var propertyByName = propertyByNameByID[selectedID], propertyLines = [];
             for (key in propertyByName) {
                 propertyLines.push(key + ' = ' + propertyByName[key]);
             }
@@ -140,7 +143,12 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         };
     }
     function getColorClass(featureID) {
-        return 'q' + (featureID % 9) + '-' + 9;
+        return 'q' + (9 - (featureID % 9)) + '-' + 9;
+    }
+    function setFeatureColor(featureID, colorClass) {
+        $(elementsByID[featureID]).each(function() {
+            this.setAttribute('class', colorClass);
+        });
     }
 
     // Make map using Polymaps
@@ -165,19 +173,31 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         }
     ).click(function() {
         if (selectedID) {
-            var featurePack = featurePackByID[selectedID];
-            if (!featurePack || !featurePack.data.geometry) return;
+            // Compute feature extent
             var minLon = 360, minLat = 360, maxLon = 0, maxLat = 0;
-            $(featurePack.data.geometry.coordinates).each(function() {
-                $(this).each(function() {
-                    var lon = this[0], lat = this[1];
-                    if (lon < minLon) minLon = lon;
-                    if (lon > maxLon) maxLon = lon;
-                    if (lat < minLat) minLat = lat;
-                    if (lat > maxLat) maxLat = lat;
+            $(geometriesByID[selectedID]).each(function() {
+                $(this.coordinates).each(function() {
+                    $(this).each(function() {
+                        var lon = this[0], lat = this[1];
+                        if (lon < minLon) minLon = lon;
+                        if (lon > maxLon) maxLon = lon;
+                        if (lat < minLat) minLat = lat;
+                        if (lat > maxLat) maxLat = lat;
+                    });
                 });
             });
-            map.extent([{lon: minLon, lat: minLat}, {lon: maxLon, lat: maxLat}]);
+            // Scale to include more background
+            var scalingFactor = 1.2;
+            var xLengthHalved = (maxLon - minLon) / 2;
+            var yLengthHalved = (maxLat - minLat) / 2;
+            // Zoom to scaled feature extent
+            map.extent([{
+                lon: minLon + (1 - scalingFactor) * xLengthHalved,
+                lat: minLat + (1 - scalingFactor) * yLengthHalved
+            }, {
+                lon: minLon + (1 + scalingFactor) * xLengthHalved,
+                lat: minLat + (1 + scalingFactor) * yLengthHalved
+            }]);
         }
     });
 </%def>
