@@ -12,10 +12,10 @@ ${self.head()}
 
 <style> 
     a {text-decoration: none}
-    #navigation {position: fixed; top: 0; left: 0; width: 20em; height: 13%; overflow: auto}
-    #toolbar {position: fixed; top: 13%; left: 0; width: 20em; height: 30%; overflow: auto; background-color: #eeeeee}
-    #list {position: fixed; top: 43%; left: 0; width: 20em; height: 30%; overflow: auto; background-color: #dddddd}
-    #detail {position: fixed; top: 73%; left: 0; width: 20em; bottom: 0; overflow: auto; background-color: #cccccc}
+    #navigation {position: fixed; top: 0; left: 0; width: 20em; height: 25%; overflow: auto}
+    #toolbar {position: fixed; top: 25%; left: 0; width: 20em; height: 25%; overflow: auto; background-color: #eeeeee}
+    #list {position: fixed; top: 50%; left: 0; width: 20em; height: 25%; overflow: auto; background-color: #dddddd}
+    #detail {position: fixed; top: 75%; left: 0; width: 20em; bottom: 0; overflow: auto; background-color: #cccccc}
     #detailHeader {font-size: x-large; font-weight: bold}
     #map {position: fixed; top: 0; right: 0; left: 20em; height: 100%}
     .normalFONT {font-family: Helvetica, Arial, sans-serif}
@@ -108,6 +108,13 @@ personKey = person.key if person else ''
     &mdash;
     <a class=linkOFF href="${h.url('person_update')}">${session['nickname']}</a>
 % endif
+    <ul>
+        <li>Select tags</li>
+        <li>Click feature in map or table</li>
+        <li>Click on feature detail box</li>
+        <li>Drag mouse on map</li>
+        <li>Scroll mouse wheel on map</li>
+    </ul>
 </div> 
 
 <div id=toolbar></div> 
