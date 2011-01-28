@@ -1,6 +1,6 @@
 GeoRegistry API
 ===============
-`GeoRegistry.org <http://georegistry.org>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.
+`GeoRegistry.org <http://georegistry.org>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.  `Source code is available <https://github.com/invisibleroads/georegistry>`_.
 
 Examples
 --------
