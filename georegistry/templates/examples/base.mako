@@ -98,15 +98,14 @@ personKey = person.key if person else ''
     <input class=normalFONT id=refresh type=button value=Refresh>
     <br>
     <a class=linkOFF href='${h.url("/docs")}'>See documentation</a> &nbsp;
-    <a class=linkOFF href='${h.url("person_register")}'>Get key</a> &nbsp;
 % if not h.isPerson():
 % if not request.path.startswith('/people/login'):
+    <a class=linkOFF href='${h.url("person_register")}'>Get key</a> &nbsp;
     <a class=linkOFF href="${h.url('person_login', url=request.path)}">Login</a>
 % endif
 % else:
+    <a class=linkOFF href="${h.url('person_update')}">${session['nickname']}</a> &nbsp;
     <a class=linkOFF href="${h.url('person_logout', url=request.path)}">Logout</a>
-    &mdash;
-    <a class=linkOFF href="${h.url('person_update')}">${session['nickname']}</a>
 % endif
     <ul>
         <li>Select tags</li>

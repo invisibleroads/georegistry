@@ -45,8 +45,6 @@ def run(shapePath):
     tagTexts = [
         countryName + (u' Administrative Level %s' % administrativeLevel if administrativeLevel > 0 else ''),
     ]
-    if administrativeLevel == 0:
-        tagTexts.append(u'* countries')
     tags = model.getTags('\n'.join(tagTexts), addMissing=True)
     # For each geometry,
     for shapelyGeometry, fieldPack in itertools.izip(shapelyGeometries, fieldPacks):
