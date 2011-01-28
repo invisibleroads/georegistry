@@ -132,11 +132,13 @@
         hoveredID = feature.fid;
         // Highlight list entry
         listHover = $('#d' + hoveredID);
-        listHover.removeClass('bN bS').addClass('bH');
-        if (scrollList) {
-            // Scroll list
-            var list = $('#list');
-            list.scrollTop(list.scrollTop() + listHover.position().top - list.height() / 2);
+        if (listHover) {
+            listHover.removeClass('bN bS').addClass('bH');
+            if (scrollList) {
+                // Scroll list
+                var list = $('#list');
+                list.scrollTop(list.scrollTop() + listHover.position().top - list.height() / 2);
+            }
         }
     }
     function selectFeature(feature) {

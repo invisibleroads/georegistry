@@ -98,11 +98,13 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         return function(e) {
             // Highlight list entry
             var listHover = $('#d' + featureID);
-            listHover.removeClass('bN bS').addClass('bH');
-            if (scrollList) {
-                // Scroll list
-                var list = $('#list');
-                list.scrollTop(list.scrollTop() + listHover.position().top - list.height() / 2);
+            if (listHover) {
+                listHover.removeClass('bN bS').addClass('bH');
+                if (scrollList) {
+                    // Scroll list
+                    var list = $('#list');
+                    list.scrollTop(list.scrollTop() + listHover.position().top - list.height() / 2);
+                }
             }
             // Highlight map entry
             setFeatureColor(featureID, 'fH');
