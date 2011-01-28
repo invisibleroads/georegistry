@@ -7,6 +7,9 @@
 <link href='/files/openlayers/theme/default/google.css' media='screen' rel='stylesheet' type='text/css' /> 
 <script src='/files/openlayers/OpenLayers.js' type='text/javascript'></script> 
 <script src='http://maps.google.com/maps/api/js?sensor=false' type='text/javascript'></script> 
+<style>
+    .olLayerGoogleCopyright {display: none}
+</style>
 </%def>
 
 <%def name="js()">
@@ -17,10 +20,12 @@
             map.removeLayer(layer);
             layer.destroy();
             layer = undefined;
-            $('#list').html('');
             $('#detail').html('');
         }
-        if (!tagString) return;
+        if (!tagString) {
+            $('#list').html('');
+            return;
+        }
         // Update
         layer = new OpenLayers.Layer.Vector('Features', {
             projection: new OpenLayers.Projection('EPSG:4326'),
@@ -46,44 +51,49 @@
                 // Push
                 items.push({
                     featureID: this.fid,
-                    name: this.attributes.name
+                    name: this.attributes.name || this.fid + ''
                 });
             });
             // Sort
-            items.sort(compareFeatureByName);
+            items.sort(function(a, b) {
+                var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
+                if (nameA < nameB) return -1;
+                else if (nameA > nameB) return 1;
+                else return 0;
+            });
             // Display
             var listLines = [];
             $(items).each(function() {
-                listLines.push('<div class="fNormal feature" id=f' + this.featureID + '>' + this.name + '</div>');
+                listLines.push('<div class="fN feature" id=d' + this.featureID + '>' + this.name + '</div>');
             });
             $('#list').html(listLines.join('\n'));
             $('#list .feature').hover(
                 function () {
                     // Change div color
-                    this.className = this.className.replace('fNormal', 'fHover');
+                    this.className = this.className.replace('fN', 'fH');
                     // Change map color
                     listScroll = 0;
                     hoverControl.overFeature(layer.getFeatureByFid(getID(this)));
                 }, 
                 function () {
                     // Change div color
-                    this.className = this.className.replace('fHover', 'fNormal');
+                    this.className = this.className.replace('fH', 'fN');
                     // Change map color
                     hoverControl.outFeature(layer.getFeatureByFid(getID(this)));
                     listScroll = 1;
                 }
             ).click(function() {
-                var featureSelectedNew = layer.getFeatureByFid(getID(this));
-                if (featureSelectedOld != featureSelectedNew) {
+                var fSedNew = layer.getFeatureByFid(getID(this));
+                if (fSedOld != fSedNew) {
                     selectControl.unselectAll();
-                    selectControl.select(featureSelectedNew);
-                    featureSelectedOld = featureSelectedNew;
+                    selectControl.select(fSedNew);
+                    fSedOld = fSedNew;
                 }
             });
         });
         layer.events.register('featuresremoved', null, function(data) {
             $(data.features).each(function() {
-                $('#f' + this.fid).remove();
+                $('#d' + this.fid).remove();
             });
         });
         map.addLayer(layer);
@@ -119,10 +129,10 @@
     var listHover, listScroll = 1;
     function hoverFeature(feature) {
         if (listHover) {
-            listHover.attr('className', listHover.attr('className').replace('fHover', 'fNormal'));
+            listHover.attr('className', listHover.attr('className').replace('fH', 'fN'));
         }
-        listHover = $('#f' + feature.fid);
-        listHover.attr('className', listHover.attr('className').replace('fNormal', 'fHover'));
+        listHover = $('#d' + feature.fid);
+        listHover.attr('className', listHover.attr('className').replace('fN', 'fH'));
         if (listScroll) {
             var list = $('#list');
             list.scrollTop(list.scrollTop() + listHover.position().top - list.height() / 2);
@@ -130,8 +140,8 @@
     }
     function selectFeature(feature) {
         // Change style for corresponding list div
-        var listSelect = $('#f' + feature.fid);
-        listSelect.attr('className', listSelect.attr('className').replace('fHover', 'fSelect'));
+        var listSelect = $('#d' + feature.fid);
+        listSelect.attr('className', listSelect.attr('className').replace('fH', 'fS'));
         // Set feature detail
         var attributeByName = feature.attributes, attributeLines = [];
         for (key in attributeByName) {
@@ -142,12 +152,12 @@
     }
     function unselectFeature(feature) {
         // Clear
-        featureSelectedOld = undefined;
+        fSedOld = undefined;
         // Clear feature detail
         $('#detail').html('');
         // Change style for corresponding list div
-        var listSelect = $('#f' + feature.fid);
-        listSelect.attr('className', listSelect.attr('className').replace('fSelect', 'fNormal'));
+        var listSelect = $('#d' + feature.fid);
+        listSelect.attr('className', listSelect.attr('className').replace('fS', 'fN'));
     }
 
     <%text>
@@ -201,10 +211,10 @@
             layer.refresh({force: true});
         }
     });
-    var featureSelectedOld;
+    var fSedOld;
     $('#detail').hover(
         function() {
-            if (featureSelectedOld) {
+            if (fSedOld) {
                 $(this).css('background-color', '#b2b2b2');
             }
         },
@@ -212,8 +222,8 @@
             $(this).css('background-color', '#cccccc');
         }
     ).click(function() {
-        if (featureSelectedOld && featureSelectedOld.geometry) {
-            map.zoomToExtent(featureSelectedOld.geometry.getBounds().scale(1.2));
+        if (fSedOld && fSedOld.geometry) {
+            map.zoomToExtent(fSedOld.geometry.getBounds().scale(1.2));
         }
     });
 </%def>

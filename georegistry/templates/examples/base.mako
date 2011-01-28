@@ -21,10 +21,9 @@ ${self.head()}
     .normalFONT {font-family: Helvetica, Arial, sans-serif}
     .linkOFF {color: darkblue; background-color: white}
     .linkON {color: white; background-color: darkblue}
-    .fNormal {background-color: #dddddd} 
-    .fHover {background-color: #ff9900}
-    .fSelect {background-color: #ffff00}
-    .olLayerGoogleCopyright {display: none}
+    .fN {background-color: #dddddd}
+    .fH {background-color: #ff9900}
+    .fS {background-color: #ffff00}
     ${self.css()}
 </style> 
 
@@ -40,12 +39,6 @@ $(document).ready(function() {
     );
     function getNumber(x) {return /\d+/.exec(x)[0]}
     function getID(obj) {return getNumber(obj.id)}
-    function compareFeatureByName(a, b) {
-        var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
-        if (nameA < nameB) return -1;
-        else if (nameA > nameB) return 1;
-        else return 0;
-    }
 
     // Define functions
     function refreshInterface() {
