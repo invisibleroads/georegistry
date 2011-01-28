@@ -12,10 +12,10 @@ ${self.head()}
 
 <style> 
     a {text-decoration: none}
-    #navigation {position: fixed; top: 0; left: 0; width: 20em; height: 8em; overflow: auto}
-    #toolbar {position: fixed; top: 8em; left: 0; width: 20em; height: 8em; overflow: auto; background-color: #eeeeee}
-    #list {position: fixed; top: 16em; left: 0; width: 20em; height: 8em; overflow: auto; background-color: #dddddd}
-    #detail {position: fixed; top: 24em; left: 0; width: 20em; bottom: 0; overflow: auto; background-color: #cccccc}
+    #navigation {position: fixed; top: 0; left: 0; width: 20em; height: 13%; overflow: auto}
+    #toolbar {position: fixed; top: 13%; left: 0; width: 20em; height: 30%; overflow: auto; background-color: #eeeeee}
+    #list {position: fixed; top: 43%; left: 0; width: 20em; height: 30%; overflow: auto; background-color: #dddddd}
+    #detail {position: fixed; top: 73%; left: 0; width: 20em; bottom: 0; overflow: auto; background-color: #cccccc}
     #detailHeader {font-size: x-large; font-weight: bold}
     #map {position: fixed; top: 0; right: 0; left: 20em; height: 100%}
     .normalFONT {font-family: Helvetica, Arial, sans-serif}
@@ -39,6 +39,12 @@ $(document).ready(function() {
     );
     function getNumber(x) {return /\d+/.exec(x)[0]}
     function getID(obj) {return getNumber(obj.id)}
+    function compareByName(a, b) {
+        var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
+        if (nameA < nameB) return -1;
+        else if (nameA > nameB) return 1;
+        else return 0;
+    }
 
     // Define functions
     function refreshInterface() {
@@ -85,12 +91,12 @@ person = Session.query(model.Person).get(personID)
 personKey = person.key if person else ''
 %>
 <div id=navigation>
-    API Key<br>
+    Key 
     <input class=normalFONT id=key value='${personKey}'>
     <input class=normalFONT id=refresh type=button value=Refresh>
     <br>
-    <a class=linkOFF href='${h.url("/docs")}'>See Documentation</a><br>
-    <a class=linkOFF href='${h.url("person_register")}'>Get API Key</a><br>
+    <a class=linkOFF href='${h.url("/docs")}'>See documentation</a> &nbsp;
+    <a class=linkOFF href='${h.url("person_register")}'>Get key</a> &nbsp;
 % if not h.isPerson():
 % if not request.path.startswith('/people/login'):
     <a class=linkOFF href="${h.url('person_login', url=request.path)}">Login</a>

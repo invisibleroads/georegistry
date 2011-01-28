@@ -55,12 +55,7 @@
                 });
             });
             // Sort
-            items.sort(function(a, b) {
-                var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
-                if (nameA < nameB) return -1;
-                else if (nameA > nameB) return 1;
-                else return 0;
-            });
+            items.sort(compareByName);
             // Display
             var listLines = [];
             $(items).each(function() {
@@ -83,11 +78,11 @@
                     listScroll = 1;
                 }
             ).click(function() {
-                var fSedNew = layer.getFeatureByFid(getID(this));
-                if (fSedOld != fSedNew) {
+                var featureSelectedNew = layer.getFeatureByFid(getID(this));
+                if (featureSelectedOld.fid != featureSelectedNew.fid) {
                     selectControl.unselectAll();
-                    selectControl.select(fSedNew);
-                    fSedOld = fSedNew;
+                    selectControl.select(featureSelectedNew);
+                    featureSelectedOld = featureSelectedNew;
                 }
             });
         });
@@ -152,7 +147,7 @@
     }
     function unselectFeature(feature) {
         // Clear
-        fSedOld = undefined;
+        featureSelectedOld = undefined;
         // Clear feature detail
         $('#detail').html('');
         // Change style for corresponding list div
@@ -211,10 +206,10 @@
             layer.refresh({force: true});
         }
     });
-    var fSedOld;
+    var featureSelectedOld;
     $('#detail').hover(
         function() {
-            if (fSedOld) {
+            if (featureSelectedOld) {
                 $(this).css('background-color', '#b2b2b2');
             }
         },
@@ -222,8 +217,8 @@
             $(this).css('background-color', '#cccccc');
         }
     ).click(function() {
-        if (fSedOld && fSedOld.geometry) {
-            map.zoomToExtent(fSedOld.geometry.getBounds().scale(1.2));
+        if (featureSelectedOld && featureSelectedOld.geometry) {
+            map.zoomToExtent(featureSelectedOld.geometry.getBounds().scale(1.2));
         }
     });
 </%def>

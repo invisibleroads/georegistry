@@ -37,7 +37,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
                 // Set click listener
                 // this.element.addEventListener('mouseclick', getSelectFeature(this.data), false);
                 // Set color class
-                this.element.setAttribute('class', 'q' + (this.data.id % 9) + '-' + 9);
+                this.element.setAttribute('class', getColorClass(this.data.id));
                 // Set id
                 this.element.setAttribute('id', 'e' + this.data.id);
             });
@@ -58,23 +58,42 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
                 }
             }
             // Sort
-            items.sort(function(a, b) {
-                var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
-                if (nameA < nameB) return -1;
-                else if (nameA > nameB) return 1;
-                else return 0;
-            });
+            items.sort(compareByName);
             // Display
             var listLines = [];
             $(items).each(function() {
                 listLines.push('<div class="fN feature" id=d' + this.featureID + '>' + this.name + '</div>');
             });
             $('#list').html(listLines.join('\n'));
+            $('#list .feature').hover(
+                function () {
+                    // Change div color
+                    this.className = this.className.replace('fN', 'fH');
+                    // Change map color
+                    var featureID = getID(this);
+                    featurePackByID[featureID].element.setAttribute('fH');
+                }, 
+                function () {
+                    // Change div color
+                    this.className = this.className.replace('fH', 'fN');
+                    // Change map color
+                    var featureID = getID(this);
+                    featurePackByID[featureID].element.setAttribute(getColorClass(featureID));
+                }
+            ).click(function() {
+                var fSedNew = layer.getFeatureByFid(getID(this));
+                if (fSedOld != fSedNew) {
+                    selectControl.unselectAll();
+                    selectControl.select(fSedNew);
+                    fSedOld = fSedNew;
+                }
+            });
+        });
         });
         map.add(layer);
     }
 
-    // Define function factories
+    // Define factories
     var listHover, listScroll = 1;
     function getHoverFeature(feature) {
         return function() {
@@ -93,6 +112,9 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
     function getSelectFeature(feature) {
         return function() {
         };
+    }
+    function getColorClass(featureID) {
+        return 'q' + (featureID % 9) + '-' + 9;
     }
 
     // Make map using Polymaps
