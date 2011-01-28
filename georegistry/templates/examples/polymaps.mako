@@ -173,19 +173,28 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         }
     ).click(function() {
         if (selectedID) {
-            // Compute feature extent
-            var minLon = 360, minLat = 360, maxLon = 0, maxLat = 0;
-            $(geometriesByID[selectedID]).each(function() {
-                $(this.coordinates).each(function() {
-                    $(this).each(function() {
-                        var lon = this[0], lat = this[1];
-                        if (lon < minLon) minLon = lon;
-                        if (lon > maxLon) maxLon = lon;
-                        if (lat < minLat) minLat = lat;
-                        if (lat > maxLat) maxLat = lat;
-                    });
-                });
-            });
+            // Initialize
+            var mapExtent = map.extent(), mapLL = mapExtent[0], mapUR = mapExtent[1];
+            var minLon = mapUR.lon, minLat = mapUR.lat, maxLon = mapLL.lon, maxLat = mapLL.lat;
+            var geometries = geometriesByID[selectedID];
+            var queue = [];
+            for (var i = 0; i < geometries.length; i++) {
+                queue.push(geometries[i].coordinates);
+            }
+            while (queue.length) {
+                var object = queue.pop();
+                if (typeof object[0] == 'number') {
+                    var lon = object[0], lat = object[1];
+                    if (lon < minLon) minLon = lon;
+                    if (lon > maxLon) maxLon = lon;
+                    if (lat < minLat) minLat = lat;
+                    if (lat > maxLat) maxLat = lat;
+                } else {
+                    for (var i = 0; i < object.length; i++) {
+                        queue.push(object[i]);
+                    }
+                }
+            }
             // Scale to include more background
             var scalingFactor = 1.2;
             var xLengthHalved = (maxLon - minLon) / 2;
