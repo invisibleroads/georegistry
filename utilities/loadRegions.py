@@ -36,7 +36,10 @@ def run(shapePath):
     countryAlpha3 = countryAlpha3.upper()
     administrativeLevel = int(administrativeLevel)
     # Load
-    countryName = countryPackByAlpha3[countryAlpha3][0].decode('utf-8')
+    try:
+        countryName = countryPackByAlpha3[countryAlpha3][0].decode('utf-8')
+    except KeyError:
+        return '%s: Unable to match country code' % shapeName
     proj4, shapelyGeometries, fieldPacks, fieldDefinitions = geometry_store.load(shapePath)
     # Initialize
     srid = getSRID(proj4)
