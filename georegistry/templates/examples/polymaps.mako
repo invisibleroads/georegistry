@@ -141,7 +141,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
                 propertyLines.push(key + ' = ' + propertyByName[key]);
             }
             propertyLines.sort();
-            $('#detail').html('<div id=detailHeader>' + propertyByName['name'] + '</div><br>' + propertyLines.join('<br>'));
+            $('#detail').html('<div id=detailHeader>' + propertyByName['Name'] + '</div><br>' + propertyLines.join('<br>'));
         };
     }
     function getColorClass(featureID) {
