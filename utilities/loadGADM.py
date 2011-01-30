@@ -43,7 +43,7 @@ def run(shapePath):
     proj4, shapelyGeometries, fieldPacks, fieldDefinitions = geometry_store.load(shapePath)
     # Initialize
     srid = getSRID(proj4)
-    areaCount = 0
+    featureCount = 0
     # Make tags
     tagTexts = [
         countryName + (u' Administrative Level %s' % administrativeLevel if administrativeLevel > 0 else ''),
@@ -71,11 +71,11 @@ def run(shapePath):
         feature.tags = tags
         Session.add(feature)
         # Increment
-        areaCount += 1
+        featureCount += 1
     # Commit
     Session.commit()
     # Return
-    return '%s: %s' % (shapeName, areaCount)
+    return '%s: %s' % (shapeName, featureCount)
 
 def simplifyProj4(proj4):
     'Simplify proj4 string'
