@@ -51,7 +51,7 @@
                 // Push
                 items.push({
                     featureID: this.fid,
-                    name: this.attributes.name || this.fid + ''
+                    name: this.attributes['Name'] || this.fid + ''
                 });
             });
             // Sort

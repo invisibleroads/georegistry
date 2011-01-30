@@ -58,7 +58,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
                     propertyByName = propertyByNameByID[featureID];
                     items.push({
                         featureID: featureID,
-                        name: propertyByName.name || featureID + ''
+                        name: propertyByName['Name'] || featureID + ''
                     });
                 } 
                 // If the feature is not visible,
