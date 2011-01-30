@@ -61,7 +61,7 @@ def run(shapePath):
             featureName = featureProperties['NAME_%s' % administrativeLevel]
         else:
             featureName = featureProperties['NAME_ENGLI']
-        featureProperties['Name'] = featureName
+        featureProperties['name'] = featureName
         # Make feature
         feature = model.Feature()
         feature.owner_id = personID

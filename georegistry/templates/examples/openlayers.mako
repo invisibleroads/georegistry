@@ -151,7 +151,7 @@
             attributeLines.push(key + ' = ' + attributeByName[key]);
         }
         attributeLines.sort();
-        $('#detail').html('<div id=detailHeader>' + attributeByName['Name'] + '</div><br>' + attributeLines.join('<br>'));
+        $('#detail').html('<div id=detailHeader>' + attributeByName['name'] + '</div><br>' + attributeLines.join('<br>'));
     }
     function unselectFeature(feature) {
         // Clear
