@@ -7,9 +7,9 @@ from webhelpers.html import literal
 from webhelpers.html.tags import *
 # Import custom modules
 from georegistry.config.parameter import *
-from georegistry.model.meta import Session
 from georegistry.lib import whenIO
 from georegistry import model
+from georegistry.model.meta import Session
 
 
 def isPerson():
@@ -19,7 +19,7 @@ def isPersonSuper():
     return 1 if session.get('is_super', False) else 0
 
 def getPersonID():
-   return session.get('personID', 0)
+    return session.get('personID', 0)
 
 def getPersonIDViaKey():
     'Try to get personID via key; otherwise, try to get personID via session'
