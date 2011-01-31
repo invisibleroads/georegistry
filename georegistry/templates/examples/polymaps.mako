@@ -160,7 +160,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         .center({lat: 40.7143528, lon: -74.0059731})
         .zoom(0)
         .add(po.interact())
-        .add(po.image().url(po.url('http://{S}tile.cloudmade.com/8f066e8fa23c4e0abb89650a38555a58/20760/256/{Z}/{X}/{Y}.png').hosts(['a.', 'b.', 'c.', ''])))
+        .add(po.image().url(po.url('http://mt{S}.googleapis.com/vt?src=apiv3&x={X}&y={Y}&z={Z}').hosts(['0', '1', '2', '3', ''])))
         .add(po.compass().pan('none'));
     map.container().setAttribute('class', 'Blues');
     var selectedID;
