@@ -1,4 +1,4 @@
-data
+data/*
 production.ini
 *.pyc
 *.swp
