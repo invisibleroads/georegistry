@@ -59,7 +59,7 @@ class TestFeaturesController(TestController):
             'srid': 4326,
             'featureCollection': geojson.dumps(geojson.FeatureCollection([
                 geojson.Feature(geometry=geojson.Point((0, 0)), properties={
-                    'population': 100,
+                    'Population': 100,
                 }),
             ])),
             'tags': 'tag1',
@@ -92,8 +92,8 @@ class TestFeaturesController(TestController):
         print 'Check that an add request works properly'
         featureID = self.app.post(url(urlName), p).body.splitlines()[0]
         print 'Check that an edit request works properly'
-        self.app.post(url(urlName), adjust(p, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(id=featureID, geometry=geojson.Point((0, 0)), properties={'name': u'Montréal'})]))))
-        self.assertEqual(Session.query(model.Feature).get(featureID).properties['name'], u'Montréal')
+        self.app.post(url(urlName), adjust(p, featureCollection=geojson.dumps(geojson.FeatureCollection([geojson.Feature(id=featureID, geometry=geojson.Point((0, 0)), properties={'Name': u'Montréal'})]))))
+        self.assertEqual(Session.query(model.Feature).get(featureID).properties['Name'], u'Montréal')
 
     def test_delete(self):
         'Make sure we can delete features properly'

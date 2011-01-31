@@ -51,7 +51,7 @@
                 // Push
                 items.push({
                     featureID: this.fid,
-                    name: this.attributes.name || this.fid + ''
+                    name: this.attributes['Name'] || this.fid + ''
                 });
             });
             // Sort
@@ -151,7 +151,7 @@
             attributeLines.push(key + ' = ' + attributeByName[key]);
         }
         attributeLines.sort();
-        $('#detail').html('<div id=detailHeader>' + attributeByName['name'] + '</div><br>' + attributeLines.join('<br>'));
+        $('#detail').html('<div id=detailHeader>' + attributeByName['Name'] + '</div><br>' + attributeLines.join('<br>'));
     }
     function unselectFeature(feature) {
         // Clear
@@ -169,7 +169,7 @@
     var rainbowStyle = new OpenLayers.StyleMap({
         'default': new OpenLayers.Style({
             fillColor: '${getColor}',
-            fillOpacity: 0.2,
+            fillOpacity: 0.3,
             strokeColor: '${getColor}',
             strokeWidth: 1,
             pointRadius: 5

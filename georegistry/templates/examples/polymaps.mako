@@ -16,6 +16,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
     .compass .zoom .chevron {stroke-width: 4px} 
     .compass .active .chevron, .compass .chevron.active {stroke: #fff}
     .compass.active .active .direction {fill: #999}
+    #features {fill-opacity: 0.3}
 </%def>
 
 <%def name='js()'>
@@ -26,7 +27,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         // Clean
         if (layer) map.remove(layer);
         if (!tagString) return;
-        layer = po.geoJson().url('${h.url("map_view_", responseFormat="json")}?key=' + $('#key').val() + '&srid=4326&tags=' + escape(tagString) + "&bboxFormat=xyxy&bbox={B}&simplified=1").on('load', function(e) {
+        layer = po.geoJson().url('${h.url("map_view_", responseFormat="json")}?key=' + $('#key').val() + '&srid=4326&tags=' + escape(tagString) + "&bboxFormat=xyxy&bbox={B}&simplified=1").id('features').on('load', function(e) {
             // For each feature,
             $(e.features).each(function() {
                 // Load
@@ -58,7 +59,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
                     propertyByName = propertyByNameByID[featureID];
                     items.push({
                         featureID: featureID,
-                        name: propertyByName.name || featureID + ''
+                        name: propertyByName['Name'] || featureID + ''
                     });
                 } 
                 // If the feature is not visible,
@@ -141,7 +142,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
                 propertyLines.push(key + ' = ' + propertyByName[key]);
             }
             propertyLines.sort();
-            $('#detail').html('<div id=detailHeader>' + propertyByName['name'] + '</div><br>' + propertyLines.join('<br>'));
+            $('#detail').html('<div id=detailHeader>' + propertyByName['Name'] + '</div><br>' + propertyLines.join('<br>'));
         };
     }
     function getColorClass(featureID) {
@@ -160,7 +161,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         .center({lat: 40.7143528, lon: -74.0059731})
         .zoom(0)
         .add(po.interact())
-        .add(po.image().url(po.url('http://{S}tile.cloudmade.com/8f066e8fa23c4e0abb89650a38555a58/20760/256/{Z}/{X}/{Y}.png').hosts(['a.', 'b.', 'c.', ''])))
+        .add(po.image().url(po.url('http://mt{S}.googleapis.com/vt?src=apiv3&x={X}&y={Y}&z={Z}').hosts(['0', '1', '2', '3', ''])))
         .add(po.compass().pan('none'));
     map.container().setAttribute('class', 'Blues');
     var selectedID;
