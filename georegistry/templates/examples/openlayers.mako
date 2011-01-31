@@ -169,7 +169,7 @@
     var rainbowStyle = new OpenLayers.StyleMap({
         'default': new OpenLayers.Style({
             fillColor: '${getColor}',
-            fillOpacity: 0.2,
+            fillOpacity: 0.3,
             strokeColor: '${getColor}',
             strokeWidth: 1,
             pointRadius: 5

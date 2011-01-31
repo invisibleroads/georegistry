@@ -16,6 +16,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
     .compass .zoom .chevron {stroke-width: 4px} 
     .compass .active .chevron, .compass .chevron.active {stroke: #fff}
     .compass.active .active .direction {fill: #999}
+    #features {fill-opacity: 0.3}
 </%def>
 
 <%def name='js()'>
@@ -26,7 +27,7 @@ ${h.stylesheet_link('/files/colorbrewer.css')}
         // Clean
         if (layer) map.remove(layer);
         if (!tagString) return;
-        layer = po.geoJson().url('${h.url("map_view_", responseFormat="json")}?key=' + $('#key').val() + '&srid=4326&tags=' + escape(tagString) + "&bboxFormat=xyxy&bbox={B}&simplified=1").on('load', function(e) {
+        layer = po.geoJson().url('${h.url("map_view_", responseFormat="json")}?key=' + $('#key').val() + '&srid=4326&tags=' + escape(tagString) + "&bboxFormat=xyxy&bbox={B}&simplified=1").id('features').on('load', function(e) {
             // For each feature,
             $(e.features).each(function() {
                 // Load
