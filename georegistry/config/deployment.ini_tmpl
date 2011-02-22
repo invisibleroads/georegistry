@@ -5,8 +5,8 @@
 #
 [DEFAULT]
 debug = false
-email_to = support@georegistry.org
-error_email_from = support@georegistry.org
+email_to = support@georegistry.invisibleroads.com
+error_email_from = support@georegistry.invisibleroads.com
 smtp_server = localhost
 # smtp_username = 
 # smtp_password = 
@@ -28,7 +28,7 @@ beaker.session.secret = ${app_instance_secret}
 sqlalchemy.url = postgresql://georegistry:georegistry@localhost/georegistry
 # recaptcha.public =
 # recaptcha.private =
-sms.imap_email = support@georegistry.org
+sms.imap_email = support@georegistry.invisibleroads.com
 sms.imap_server = localhost
 # sms.imap_username = 
 # sms.imap_password = 

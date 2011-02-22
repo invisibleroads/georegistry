@@ -11,7 +11,7 @@ setup(
     description='Web service for centralizing geospatial data across applications',
     author='Roy Hyunjin Han',
     author_email='service@invisibleroads.com',
-    url='georegistry.org',
+    url='georegistry.invisibleroads.com',
     install_requires=[
         'Pylons>=1.0',
         'recaptcha-client>=1.0.5',

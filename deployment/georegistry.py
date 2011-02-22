@@ -7,7 +7,7 @@ import simplejson
 
 # Core
 
-baseURL = 'http://georegistry.org'
+baseURL = 'http://georegistry.invisibleroads.com'
 
 def updateFeatures(key, srid, featureCollection, tags, public=False):
     'Update features using the GeoRegistry web service'

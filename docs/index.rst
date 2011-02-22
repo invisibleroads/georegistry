@@ -1,18 +1,18 @@
 GeoRegistry API
 ===============
-`GeoRegistry.org <http://georegistry.org>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.  `Source code is available <https://github.com/invisibleroads/georegistry>`_.
+The `GeoRegistry <http://georegistry.invisibleroads.com>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.  `Source code is available <https://github.com/invisibleroads/georegistry>`_.
 
 Examples
 --------
 The examples demonstrate usage of the GeoRegistry API as well as hover and click interactivity.
 
-- `Click here to see the Polymaps example <http://georegistry.org/examples/polymaps>`_ (will not work in Internet Explorer).  Thanks to Mike Bostock for hints on `SVG event handling <https://github.com/simplegeo/polymaps/blob/master/examples/tipsy/tipsy.html>`_.
+- `Click here to see the Polymaps example <http://georegistry.invisibleroads.com/examples/polymaps>`_ (will not work in Internet Explorer).  Thanks to Mike Bostock for hints on `SVG event handling <https://github.com/simplegeo/polymaps/blob/master/examples/tipsy/tipsy.html>`_.
 
-- `Click here to see the OpenLayers example <http://georegistry.org/examples/openlayers>`_.  Thanks to Andy Doro for figuring out `how to style features <http://docs.openlayers.org/library/feature_styling.html>`_.
+- `Click here to see the OpenLayers example <http://georegistry.invisibleroads.com/examples/openlayers>`_.  Thanks to Andy Doro for figuring out `how to style features <http://docs.openlayers.org/library/feature_styling.html>`_.
 
 Reference
 ---------
-The ``key`` argument is an API key assigned at `registration <http://georegistry.org/people/register>`_ and visible in your `account <http://georegistry.org/people/update>`_.  The ``tags`` and ``featureIDs`` arguments are strings or integers separated by newlines.
+The ``key`` argument is an API key assigned at `registration <http://georegistry.invisibleroads.com/people/register>`_ and visible in your `account <http://georegistry.invisibleroads.com/people/update>`_.  The ``tags`` and ``featureIDs`` arguments are strings or integers separated by newlines.
 
 ::
 
@@ -43,7 +43,7 @@ Given a geojson featureCollection, string tags and spatial reference srid, save 
 In jQuery, multiple tags should be separated by newlines.
 ::
 
-    $.post('http://georegistry.org/features', {
+    $.post('http://georegistry.invisibleroads.com/features', {
         key: YOUR_API_KEY,
         srid: 4326,
         featureCollection: '{                                              \
@@ -153,7 +153,7 @@ In jQuery, multiple featureIDs should be separated by newlines.
 ::
 
     $.ajax({
-        url: 'http://georegistry.org/features?key=' + YOUR_API_KEY + '&featureIDs=1%0A2',
+        url: 'http://georegistry.invisibleroads.com/features?key=' + YOUR_API_KEY + '&featureIDs=1%0A2',
         type: 'DELETE',
     });
 
@@ -176,7 +176,7 @@ Return tags with visible features.
 In jQuery, multiple tags will be separated by newlines.
 ::
 
-    $.get('http://georegistry.org/tags.json', {
+    $.get('http://georegistry.invisibleroads.com/tags.json', {
         key: YOUR_API_KEY
     }, function(data) {
         var tags = data.split('\n');
@@ -200,7 +200,7 @@ Given desired tags and desired spatial reference srid, get visible geojson featu
 In jQuery, you can retrieve the raw geojson.
 ::
     
-    $.get('http://georegistry.org/maps.json', {
+    $.get('http://georegistry.invisibleroads.com/maps.json', {
         key: YOUR_API_KEY,
         srid: 3857,
         tags: 'parties',
@@ -230,7 +230,7 @@ Here is how you can load GeoRegistry data using OpenLayers.
         projection: new OpenLayers.Projection('EPSG:4326'),
         strategies: [new OpenLayers.Strategy.BBOX()],
         protocol: new OpenLayers.Protocol.HTTP({
-            url: 'http://georegistry.org/maps.json',
+            url: 'http://georegistry.invisibleroads.com/maps.json',
             params: {
                 key: '${personKey}',
                 srid: 4326,
@@ -245,4 +245,4 @@ Here is how you can load GeoRegistry data using OpenLayers.
 Here is how you can load GeoRegistry data using Polymaps.
 ::
 
-    layer = po.geoJson().url("http://georegistry.org/maps.json?key=${personKey}&srid=4326&tags=" + escape(tagString) + "&bboxFormat=xyxy&bbox={B}&simplified=1");
+    layer = po.geoJson().url("http://georegistry.invisibleroads.com/maps.json?key=${personKey}&srid=4326&tags=" + escape(tagString) + "&bboxFormat=xyxy&bbox={B}&simplified=1");
