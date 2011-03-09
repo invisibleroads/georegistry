@@ -1,18 +1,18 @@
 GeoRegistry API
 ===============
-The `GeoRegistry <http://georegistry.invisibleroads.com>`_ is a free web service for software developers who want to store, query and share geospatial data across multiple applications.  `Source code is available <https://github.com/invisibleroads/georegistry>`_.
+The GeoRegistry is a free web service for software developers who want to store, query and share geospatial data across multiple applications.  `Source code is available <https://github.com/invisibleroads/georegistry>`_.
 
 Examples
 --------
 The examples demonstrate usage of the GeoRegistry API as well as hover and click interactivity.
 
-- `Click here to see the Polymaps example <http://georegistry.invisibleroads.com/examples/polymaps>`_ (will not work in Internet Explorer).  Thanks to Mike Bostock for hints on `SVG event handling <https://github.com/simplegeo/polymaps/blob/master/examples/tipsy/tipsy.html>`_.
+- `Click here to see the Polymaps example </examples/polymaps>`_ (will not work in Internet Explorer).  Thanks to Mike Bostock for hints on `SVG event handling <https://github.com/simplegeo/polymaps/blob/master/examples/tipsy/tipsy.html>`_.
 
-- `Click here to see the OpenLayers example <http://georegistry.invisibleroads.com/examples/openlayers>`_.  Thanks to Andy Doro for figuring out `how to style features <http://docs.openlayers.org/library/feature_styling.html>`_.
+- `Click here to see the OpenLayers example </examples/openlayers>`_.  Thanks to Andy Doro for figuring out `how to style features <http://docs.openlayers.org/library/feature_styling.html>`_.
 
 Reference
 ---------
-The ``key`` argument is an API key assigned at `registration <http://georegistry.invisibleroads.com/people/register>`_ and visible in your `account <http://georegistry.invisibleroads.com/people/update>`_.  The ``tags`` and ``featureIDs`` arguments are strings or integers separated by newlines.
+The ``key`` argument is an API key assigned at `registration </people/register>`_ and visible in your `account </people/update>`_.  The ``tags`` and ``featureIDs`` arguments are strings or integers separated by newlines.
 
 ::
 
