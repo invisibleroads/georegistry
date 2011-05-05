@@ -1,9 +1,9 @@
 #!/usr/bin/env python2.7
 """
-Command-line script to load GADM regions into the database
+Command-line script to load shapefiles into the database
 
 Use the first argument to specify the path of the folder
-containing the GADM shapefiles
+containing the shapefiles
 """
 # Import system modules
 import os
@@ -31,22 +31,14 @@ pattern_number = re.compile(r'(\d+)')
 def run(shapePath):
     'Load regions from shapefile'
     # Parse shapePath
-    shapeName = store.extractFileBaseName(shapePath)
-    countryAlpha3, administrativeLevel = re.match(r'(.*)_adm(\d+)', shapeName).groups()
-    countryAlpha3 = countryAlpha3.upper()
-    administrativeLevel = int(administrativeLevel)
-    # Load
-    try:
-        countryName = countryPackByAlpha3[countryAlpha3][0].decode('utf-8')
-    except KeyError:
-        return '%s: Unable to match country code' % shapeName
+    shapeName = store.extractFileBaseName(shapePath).decode('utf-8')
     proj4, shapelyGeometries, fieldPacks, fieldDefinitions = geometry_store.load(shapePath)
     # Initialize
     srid = getSRID(proj4)
     featureCount = 0
     # Make tags
     tagTexts = [
-        countryName + (u' Administrative Level %s' % administrativeLevel if administrativeLevel > 0 else ''),
+        shapeName,
     ]
     tags = model.getTags('\n'.join(tagTexts), addMissing=True)
     # For each geometry,
@@ -57,11 +49,6 @@ def run(shapePath):
             if fieldType == osgeo.ogr.OFTString and fieldValue:
                 fieldValue = fieldValue.decode('latin-1')
             featureProperties[fieldName] = fieldValue
-        if administrativeLevel > 0:
-            featureName = featureProperties['NAME_%s' % administrativeLevel]
-        else:
-            featureName = featureProperties['NAME_ENGLI']
-        featureProperties['Name'] = featureName
         # Make feature
         feature = model.Feature()
         feature.owner_id = personID
@@ -107,11 +94,6 @@ if __name__ == '__main__':
     # Parse
     optionParser = script_process.buildOptionParser()
     options, arguments = optionParser.parse_args()
-    # Load countryPackByAlpha3
-    countryPackByAlpha3 = {}
-    countryPath = store.expandBasePath('utilities/countries.csv')
-    for countryName, countryAlpha2, countryAlpha3 in csv.reader(open(countryPath, 'rt')):
-        countryPackByAlpha3[countryAlpha3.upper()] = countryName, countryAlpha2.upper()
     # Initialize
     script_process.initialize(options)
     person = Session.query(model.Person).filter(model.Person.is_super==True).first()
