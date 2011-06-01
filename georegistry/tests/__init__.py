@@ -1,51 +1,95 @@
-"""
-Pylons application test package
-
-This package assumes the Pylons environment is already loaded, such as
-when this script is imported from the `nosetests --with-pylons=test.ini`
-command.
-
-This module initializes the application via ``websetup`` (`paster
-setup-app`) and provides the base testing objects.
-"""
-# Import pylons modules
-from pylons import url
-from paste.deploy import loadapp
-from paste.script.appinstall import SetupCommand
-from routes.util import URLGenerator
-# Import system modules
-from unittest import TestCase
-from webtest import TestApp
+# -*- coding: utf-8 -*-
+'Test templates'
+import os; basePath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import webtest
+import shutil
+import unittest
 import simplejson
-# Import custom modules
-import pylons.test
+import transaction
+import warnings; warnings.simplefilter('error')
+
+from georegistry import main, load_settings
+from georegistry.models import db, User
 
 
-__all__ = ['environ', 'url', 'TestController', 'adjust']
-# Invoke websetup with the current config file
-SetupCommand('setup-app').run([pylons.test.pylonsapp.config['__file__']])
-environ = {}
+configurationPath = os.path.join(basePath, 'test.ini')
+settings = load_settings(configurationPath, basePath)
 
 
-class TestController(TestCase):
+class TestTemplate(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        wsgiapp = pylons.test.pylonsapp
-        config = wsgiapp.config
-        self.app = TestApp(wsgiapp)
-        url._push_object(URLGenerator(config['routes.map'], environ))
-        TestCase.__init__(self, *args, **kwargs)
+    router = main({'__file__': configurationPath}, **settings)
 
-    def assertEqualJSON(self, response, isOk):
+    def setUp(self):
+        # Initialize functional test framework
+        self.app = webtest.TestApp(self.router)
+        self.logout()
+        # Reset users
+        word = 'Спасибо'.decode('utf-8')
+        self.userS = ReplaceableDict() # Super
+        self.userA = ReplaceableDict() # Active
+        self.userI = ReplaceableDict() # Inactive
+        for userID, valueByKey in enumerate([self.userS, self.userA, self.userI], 1):
+            wordNumber = word + str(userID)
+            valueByKey['username'] = wordNumber
+            valueByKey['password'] = wordNumber
+            valueByKey['nickname'] = wordNumber
+            valueByKey['email'] = wordNumber + '@example.com'
+            valueByKey['is_active'] = userID != 3
+            valueByKey['is_super'] = userID == 1
+            user = User(
+                id=userID, 
+                username=valueByKey['username'], 
+                password=valueByKey['password'],
+                nickname=valueByKey['nickname'],
+                email=valueByKey['email'],
+                is_active=valueByKey['is_active'],
+                is_super=valueByKey['is_super'])
+            db.merge(user)
+        transaction.commit()
+
+    def get_url(self, name, **kwargs):
+        'Return URL for route'
+        return self.router.routes_mapper.generate(name, kwargs)
+
+    def get(self, url, params=None):
+        'Send a GET request'
+        return self.app.get(url, unicode_dictionary(params))
+
+    def post(self, url, params=None):
+        'Send a POST request'
+        return self.app.post(url, unicode_dictionary(params))
+
+    def login(self, userD):
+        'Login using credentials'
+        return self.post(self.get_url('user_login'), userD)
+
+    def logout(self):
+        'Logout'
+        return self.post(self.get_url('user_logout'))
+
+    def assert_json(self, response, isOk):
         'Assert response JSON'
-        responseData = simplejson.loads(response.body)
-        print responseData
-        self.assertEqual(responseData['isOk'], isOk)
-        return responseData
+        data = simplejson.loads(response.unicode_body)
+        if data['isOk'] != isOk:
+            print data
+        self.assertEqual(data['isOk'], isOk)
+        return data
+
+    def assert_forbidden(self, url, isForbidden=True, method='GET'):
+        'Return True if the page is forbidden'
+        body = getattr(self, method.lower())(url).body
+        return self.assertEqual('value=Login' in body, isForbidden)
 
 
-# Helpers
+def unicode_dictionary(dictionary):
+    'Convert the values of the dictionary to unicode'
+    if not dictionary:
+        return {}
+    return dict((key, value.encode('utf-8') if isinstance(value, unicode) else value) for key, value in dictionary.iteritems())
 
-def adjust(valueByName, **kwargs):
-    'Adjust valueByName using specified key and value'
-    return dict(valueByName.items() + kwargs.items())
+
+class ReplaceableDict(dict):
+    
+    def replace(self, **kwargs):
+        return ReplaceableDict(self.items() + kwargs.items())

@@ -1,31 +1,25 @@
-'Define common functions for command-line utilities'
-# Import context modules
+'Classes and functions for command-line utilities'
 import os; basePath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import sys; sys.path.append(basePath)
-# Import system modules
-import sqlalchemy as sa
-import ConfigParser
 import optparse
-# Import custom modules
-from georegistry import model
-from georegistry.lib import store
+from sqlalchemy import create_engine
+
+from georegistry import load_settings
+from georegistry.models import initialize_sql
 
 
-def buildOptionParser():
-    'Return default optionParser'
-    optionParser = optparse.OptionParser()
-    optionParser.add_option('-c', '--configurationPath', dest='configurationPath', help='use the specified configuration file', metavar='PATH', default=store.expandBasePath('development.ini'))
-    return optionParser
+class OptionParser(optparse.OptionParser):
+
+    def __init__(self):
+        optparse.OptionParser.__init__(self)
+        self.add_option('-c', '--configurationPath', dest='configurationPath', help='use the specified configuration file', metavar='PATH', default=os.path.join(basePath, 'development.ini'))
+        self.add_option('-q', '--quiet', action='store_false', dest='verbose', help='be quiet', default=True)
 
 
 def initialize(options):
-    'Initialize connection to database'
-    # Show feedback
-    print 'Using %s' % options.configurationPath
-    # Load
-    configuration = ConfigParser.ConfigParser({'here': basePath})
-    configuration.read(options.configurationPath)
-    # Connect
-    model.init_model(sa.create_engine(configuration.get('app:main', 'sqlalchemy.url')))
-    # Return
-    return configuration
+    'Connect to database and return configuration settings'
+    if options.verbose:
+        print 'Using %s' % options.configurationPath
+    settings = load_settings(options.configurationPath, basePath)
+    initialize_sql(create_engine(settings['sqlalchemy.url']))
+    return settings
