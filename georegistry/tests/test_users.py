@@ -46,7 +46,7 @@ class TestUsers(TestTemplate):
         # Confirm registration
         registrationCount2 = db.query(User_).count()
         self.assertEqual(registrationCount2 - registrationCount1, +4)
-        self.get(self.get_url('user_confirm', ticket=db.query(User_.ticket).filter_by(email=email).order_by(User_.when_expired.desc()).first()[0]))
+        self.get(self.get_url('user_confirm', ticket=db.query(User_.ticket).filter_by(email=email).order_by(User_.when_expire.desc()).first()[0]))
         # Make sure the user exists
         self.assertEqual(db.query(User).filter_by(email=email).count(), 1)
         # Make sure that conflicting registrations have been deleted
@@ -98,7 +98,7 @@ class TestUsers(TestTemplate):
         # Make sure the credentials have not changed yet
         self.assertEqual(db.query(User).filter_by(username=username, nickname=nickname, email=email).count(), 0)
         # Make sure the credentials have changed after confirmation
-        self.get(self.get_url('user_confirm', ticket=db.query(User_.ticket).filter_by(email=email).order_by(User_.when_expired.desc()).first()[0]))
+        self.get(self.get_url('user_confirm', ticket=db.query(User_.ticket).filter_by(email=email).order_by(User_.when_expire.desc()).first()[0]))
         self.assertEqual(db.query(User).filter_by(username=username, nickname=nickname, email=email).first().check(password), True)
 
     @unittest.skipIf(not settings.get('sms.imap.host'), 'not configured')
@@ -223,5 +223,5 @@ class TestUsers(TestTemplate):
         self.assert_json(self.post(url, dict(email=email)), 1)
         self.assertEqual(db.query(User).filter_by(email=email).first().check(password), True)
         # Apply change
-        self.get(self.get_url('user_confirm', ticket=db.query(User_.ticket).filter_by(email=email).order_by(User_.when_expired.desc()).first()[0]))
+        self.get(self.get_url('user_confirm', ticket=db.query(User_.ticket).filter_by(email=email).order_by(User_.when_expire.desc()).first()[0]))
         self.assertEqual(db.query(User).filter_by(email=email).first().check(password), False)

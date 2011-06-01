@@ -1,12 +1,16 @@
 'Data models'
 import transaction
-from sqlalchemy import func, Column, ForeignKey, Integer, String, LargeBinary, Unicode, Boolean, DateTime
+from sqlalchemy import (
+    func, Column, ForeignKey, Integer, String, LargeBinary, Unicode, Boolean, DateTime,
+    Table, UnicodeText, PickleType)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import column_property, scoped_session, sessionmaker, relationship, synonym
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.types import TypeDecorator
 from zope.sqlalchemy import ZopeTransactionExtension
 from cryptacular import bcrypt
+from geoalchemy import GeometryColumn, Geometry, GeometryDDL
+from geoalchemy.postgis import PGComparator
 
 from georegistry.libraries.tools import encrypt, decrypt, make_random_string
 from georegistry.parameters import *
@@ -15,6 +19,13 @@ from georegistry.parameters import *
 db = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 crypt = bcrypt.BCRYPTPasswordManager()
+scopePrivate, scopePublic = xrange(2)
+databaseSRID = 4326 # Longitude latitude
+
+
+feature_tags_table = Table('feature_tags', Base.metadata,
+    Column('feature_id', Integer, ForeignKey('features.id')),
+    Column('tag_id', Integer, ForeignKey('tags.id')))
 
 
 class CaseInsensitiveComparator(ColumnProperty.Comparator):
@@ -84,6 +95,7 @@ class User(Base):
     when_login = Column(DateTime)
     code = Column(String(CODE_LEN), default=lambda: make_random_string(CODE_LEN))
     sms_addresses = relationship('SMSAddress')
+    key = Column(String(KEY_LEN), unique=True)
 
     def __str__(self):
         return "<User(id=%s)>" % self.id
@@ -114,7 +126,7 @@ class User_(Base):
     email = Column(LowercaseEncrypted(EMAIL_LEN_MAX * 2)) # Doubled for unicode addresses
     user_id = Column(ForeignKey('users.id'))
     ticket = Column(String(TICKET_LEN), unique=True)
-    when_expired = Column(DateTime)
+    when_expire = Column(DateTime)
 
     def __str__(self):
         return "<User_(id=%s)>" % self.id
@@ -130,6 +142,40 @@ class SMSAddress(Base):
 
     def __str__(self):
         return "<SMSAddress(id=%s)>" % self.id
+
+
+class Feature(Base):
+    'A geospatial feature'
+    __tablename__ = 'features'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(ForeignKey('users.id'))
+    user = relationship(User, backref='features')
+    attributes = Column(PickleType(mutable=False))
+    scope = Column(Integer, default=scopePrivate)
+    geometry = GeometryColumn(Geometry(srid=databaseSRID), comparator=PGComparator)
+    tags = relationship('Tag', secondary=feature_tags_table, backref='features')
+
+
+class Tag(Base):
+    'A grouping of features'
+    __tablename__ = 'tags'
+    id = Column(Integer, primary_key=True)
+    text = column_property(
+        Column(Unicode(TAG_LEN_MAX), unique=True), 
+        comparator_factory=CaseInsensitiveComparator)
+    when_update = Column(DateTime)
+
+
+class Map(Base):
+    'A geojson cache'
+    __tablename__ = 'maps'
+    id = Column(Integer, primary_key=True)
+    query_hash = Column(LargeBinary(32))
+    geojson = Column(UnicodeText)
+    when_update = Column(DateTime)
+
+
+GeometryDDL(Feature.__table__)
 
 
 def initialize_sql(engine):

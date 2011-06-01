@@ -1,4 +1,4 @@
-0.0
+0.4
 ---
-
-- Started project
+- Ported code to Pyramid from Pylons
+- Ported database models

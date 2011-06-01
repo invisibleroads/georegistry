@@ -60,7 +60,7 @@ def confirm(request):
         message = 'Account updated' if user_.user_id else 'Account created'
         # Delete expired or similar user_
         db.execute(User_.__table__.delete().where(
-            (User_.when_expired < datetime.datetime.utcnow()) | 
+            (User_.when_expire < datetime.datetime.utcnow()) | 
             (User_.username == user_.username) | 
             (User_.nickname == user_.nickname) | 
             (User_.email == user_.email)))
@@ -283,7 +283,7 @@ def save_user_(request, valueByName, action, user=None):
         email=form['email'],
         user_id=user.id if user else None,
         ticket=ticket,
-        when_expired=datetime.datetime.utcnow() + datetime.timedelta(hours=TICKET_HOURS))
+        when_expire=datetime.datetime.utcnow() + datetime.timedelta(hours=TICKET_HOURS))
     db.add(user_)
     # Send message
     get_mailer(request).send_to_queue(Message(
@@ -303,7 +303,7 @@ def apply_user_(ticket):
     'Finalize a change to a user account'
     user_ = db.query(User_).filter(
         (User_.ticket == ticket) & 
-        (User_.when_expired >= datetime.datetime.utcnow())).first()
+        (User_.when_expire >= datetime.datetime.utcnow())).first()
     if not user_:
         raise UserException('')
     # If the ticket is valid,

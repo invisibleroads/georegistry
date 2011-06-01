@@ -7,6 +7,8 @@ from setuptools import setup, find_packages
 requires = [
     'cryptacular',
     'formencode',
+    'geoalchemy',
+    'geometryIO',
     'imapIO',
     'pycrypto',
     'pyramid',
@@ -39,7 +41,7 @@ CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
 
 setup(
     name='georegistry',
-    version='0.0',
+    version='0.4',
     description='georegistry',
     long_description=README + '\n\n' +  CHANGES,
     classifiers=[
@@ -49,9 +51,9 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
     ],
     author='Roy Hyunjin Han',
-    author_email='',
-    url='',
-    keywords='web wsgi bfg pylons pyramid',
+    author_email='service@invisibleroads.com',
+    url='https://github.com/invisibleroads/georegistry',
+    keywords='web wsgi bfg pylons pyramid gis maps',
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
