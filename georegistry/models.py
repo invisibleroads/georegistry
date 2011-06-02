@@ -1,4 +1,5 @@
 'Data models'
+import datetime
 import transaction
 from sqlalchemy import (
     func, Column, ForeignKey, Integer, String, LargeBinary, Unicode, Boolean, DateTime,
@@ -26,6 +27,11 @@ databaseSRID = 4326 # Longitude latitude
 feature_tags_table = Table('feature_tags', Base.metadata,
     Column('feature_id', Integer, ForeignKey('features.id')),
     Column('tag_id', Integer, ForeignKey('tags.id')))
+
+
+class ApplicationError(Exception):
+    'An application error'
+    pass
 
 
 class CaseInsensitiveComparator(ColumnProperty.Comparator):
@@ -198,3 +204,28 @@ def initialize_sql(engine):
             db.add(User(username=username, password=password, nickname=nickname, email=email, is_super=is_super))
         print
         transaction.commit()
+
+
+def get_tags(string, addMissing=False):
+    'Return corresponding tags'
+    # Load tagTexts and discard empty lines
+    tagTexts = filter(lambda x: x, (x.strip() for x in string.splitlines()))
+    if not tagTexts:
+        raise ApplicationError('Must specify at least one tag in tags')
+    # Check whether tagTexts are too long
+    longTagTexts = filter(lambda x: len(x) > TAG_LEN_MAX, tagTexts)
+    if longTagTexts:
+        raise ApplicationError('Cannot add the following tags because they are too long:\n%s' % '\n'.join(longTagTexts))
+    # Check whether tags exist
+    missingTagTexts = list(set(tagTexts).difference(tag.text for tag in db.query(Tag).filter(Tag.text.in_(tagTexts))))
+    if missingTagTexts:
+        # If we are not supposed to add missing tags,
+        if not addMissing:
+            raise ApplicationError('Cannot match the following tags: %s' % missingTagTexts)
+        # Add tags that don't exist
+        now = datetime.datetime.utcnow()
+        for tagText in missingTagTexts:
+            db.add(Tag(text=tagText, when_update=now))
+        db.flush()
+    # Return
+    return db.query(Tag).filter(Tag.text.in_(tagTexts)).all()

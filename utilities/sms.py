@@ -12,10 +12,11 @@ def run(settings):
 # If we are running standalone,
 if __name__ == '__main__':
     # Parse
-    optionParser = script_process.OptionParser()
-    options = optionParser.parse_args()[0]
+    argumentParser = script_process.ArgumentParser(
+        description='Process SMS messages in mailbox')
+    args = argumentParser.parse_args()
     # Run
-    message = run(script_process.initialize(options))
+    message = run(script_process.initialize(args))
     # Say
-    if options.verbose:
+    if args.verbose:
         print message

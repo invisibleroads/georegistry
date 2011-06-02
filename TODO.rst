@@ -1,7 +1,12 @@
-- initialize user.key
-- make user.key change on mutate
+- Initialize user.key
+- Make user.key change on mutate
+- Port maps.view
+- Port features.update
+- Port features.delete
+- Port tags.index
+
 - set tag.when_update to utcnow on creation
 - set tag.when_update to utcnow on update
-look into listHover sometimes disappearing 
-look into propertyByName sometimes not loading
-look into openlayers map possibly returning bbox that are much larger than viewable area
+- look into listHover sometimes disappearing 
+- look into propertyByName sometimes not loading
+- look into openlayers map possibly returning bbox that are much larger than viewable area
